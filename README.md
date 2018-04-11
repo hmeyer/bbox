@@ -15,9 +15,9 @@ Intersect two Bounding Boxes
 extern crate nalgebra as na;
 extern crate bbox;
 let bbox1 = bbox::BoundingBox::<f64>::new(na::Point3::new(0., 0., 0.),
-                                                   na::Point3::new(1., 2., 3.));
+                                          na::Point3::new(1., 2., 3.));
 let bbox2 = bbox::BoundingBox::<f64>::new(na::Point3::new(-1., -2., -3.),
-                                                   na::Point3::new(3., 2., 1.));
+                                          na::Point3::new(3., 2., 1.));
 let intersection = bbox1.intersection(&bbox2);
 ```
 
@@ -27,6 +27,6 @@ extern crate nalgebra as na;
 extern crate bbox;
 let rotation = na::Rotation::from_euler_angles(10., 11., 12.).to_homogeneous();
 let bbox = bbox::BoundingBox::<f64>::new(na::Point3::new(0., 0., 0.),
-                                                  na::Point3::new(1., 2., 3.));
+                                         na::Point3::new(1., 2., 3.));
 let rotated_box = bbox.transform(&rotation);
 ```
