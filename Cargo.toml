@@ -6,7 +6,7 @@ authors = ["Henning Meyer <tutmann@gmail.com>"]
 description = "Managing axis aligned 3d Bounding Boxes."
 repository = "https://github.com/hmeyer/bbox"
 readme = "README.md"
-keywords = ["bounding box", "bounding boxes", "3d", "csg", "union", "intersection"]
+keywords = ["boundingbox", "3d", "csg", "union", "intersection"]
 license = "GPL-3.0"
 
 [lib]
