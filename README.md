@@ -1,14 +1,32 @@
-# truescad
-[![Build Status](https://travis-ci.org/hmeyer/truescad.svg?branch=master)](https://travis-ci.org/hmeyer/truescad)
+# stl_io
+[![Build Status](https://travis-ci.org/hmeyer/bbox.svg?branch=master)](https://travis-ci.org/hmeyer/bbox) [![Cargo](https://img.shields.io/crates/v/bbox.svg)](https://crates.io/crates/bbox) [![License: GPL-3.0](https://img.shields.io/crates/l/direct-gui.svg)](#license) [![Downloads](https://img.shields.io/crates/d/bbox.svg)](#downloads)
 
-Truescad is a script based CAD program similar to http://www.openscad.org/.
-Similar to http://www.implicitcad.org/ Truescad uses implcit functions to represent geometry and hence offers very precise geometry.
 
-In order to generate meshes, e.g. for 3D-printing, Truescad tessellates the geometry into a mesh with arbritrary precision.
+bbox is crate for managing axis aligned 3d Bounding Boxes.
+Bounding Boxes can be created, dilated, transformed and joined with other Bounding Boxes using
+CSG operations.
+Finally you can test whether or not a Bounding Box contains some point and what approximate
+distance a Point has to the Box.
 
-Truescad offers rounded CSG, which allows for smooth and rounded looking objects.
+# Examples
 
-![Alt text](doc/true_view.png "accurate geometry view")
-![Alt text](doc/tessellated.png "generated mesh")
+Intersect two Bounding Boxes
+```rust
+extern crate nalgebra as na;
+extern crate bbox;
+let bbox1 = bbox::BoundingBox::<f64>::new(na::Point3::new(0., 0., 0.),
+                                                   na::Point3::new(1., 2., 3.));
+let bbox2 = bbox::BoundingBox::<f64>::new(na::Point3::new(-1., -2., -3.),
+                                                   na::Point3::new(3., 2., 1.));
+let intersection = bbox1.intersection(&bbox2);
+```
 
-Truescad is written in Rust.
+Rotate a Bounding Box:
+```rust
+extern crate nalgebra as na;
+extern crate bbox;
+let rotation = na::Rotation::from_euler_angles(10., 11., 12.).to_homogeneous();
+let bbox = bbox::BoundingBox::<f64>::new(na::Point3::new(0., 0., 0.),
+                                                  na::Point3::new(1., 2., 3.));
+let rotated_box = bbox.transform(&rotation);
+```
