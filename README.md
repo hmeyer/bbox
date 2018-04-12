@@ -31,7 +31,7 @@ let bbox = bbox::BoundingBox::<f64>::new(na::Point3::new(0., 0., 0.),
 let rotated_box = bbox.transform(&rotation);
 ```
 Is a point contained in the Box?
-//!
+
 ```rust
 extern crate nalgebra as na;
 extern crate bbox;
@@ -40,7 +40,7 @@ let bbox = bbox::BoundingBox::<f64>::new(na::Point3::new(0., 0., 0.),
 let result = bbox.contains(na::Point3::new(1., 1., 1.));
 ```
 Calculate approximate distance of a point to the Box:
-//!
+
 ```rust
 extern crate nalgebra as na;
 extern crate bbox;
