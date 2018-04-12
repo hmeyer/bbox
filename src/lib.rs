@@ -5,7 +5,7 @@
 //! distance a Point has to the Box.
 //! # Examples
 //!
-//! Intersect two Bounding Boxes
+//! Intersect two Bounding Boxes:
 //!
 //! ```rust,no_run
 //! extern crate nalgebra as na;
@@ -26,7 +26,24 @@
 //!                                                   na::Point3::new(1., 2., 3.));
 //! let rotated_box = bbox.transform(&rotation);
 //! ```
-
+//! Is a point contained in the Box?
+//!
+//! ```rust,no_run
+//! extern crate nalgebra as na;
+//! extern crate bbox;
+//! let bbox = bbox::BoundingBox::<f64>::new(na::Point3::new(0., 0., 0.),
+//!                                          na::Point3::new(1., 2., 3.));
+//! let result = bbox.contains(na::Point3::new(1., 1., 1.));
+//! ```
+//! Calculate approximate distance of a point to the Box:
+//!
+//! ```rust,no_run
+//! extern crate nalgebra as na;
+//! extern crate bbox;
+//! let bbox = bbox::BoundingBox::<f64>::new(na::Point3::new(0., 0., 0.),
+//!                                          na::Point3::new(1., 2., 3.));
+//! let distance = bbox.distance(na::Point3::new(1., 1., 1.));
+//! ```
 extern crate alga;
 extern crate nalgebra as na;
 extern crate num_traits;
