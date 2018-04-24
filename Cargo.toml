@@ -1,6 +1,6 @@
 [package]
 name = "bbox"
-version = "0.7.3"
+version = "0.7.4"
 authors = ["Henning Meyer <tutmann@gmail.com>"]
 
 description = "Managing axis aligned 3d Bounding Boxes."

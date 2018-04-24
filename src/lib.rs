@@ -54,12 +54,12 @@ use std::fmt::Debug;
 
 /// 3D Bounding Box - defined by two diagonally opposing points.
 #[derive(Clone, Debug, PartialEq)]
-pub struct BoundingBox<S: 'static + Real + Debug> {
+pub struct BoundingBox<S: Real + Debug> {
     pub min: na::Point3<S>,
     pub max: na::Point3<S>,
 }
 
-fn point_min<S: 'static + Float + Real + Debug>(p: &[na::Point3<S>]) -> na::Point3<S> {
+fn point_min<S: Real>(p: &[na::Point3<S>]) -> na::Point3<S> {
     if p.len() == 1 {
         p[0]
     } else {
@@ -73,7 +73,7 @@ fn point_min<S: 'static + Float + Real + Debug>(p: &[na::Point3<S>]) -> na::Poin
         )
     }
 }
-fn point_max<S: 'static + Float + Real + Debug>(p: &[na::Point3<S>]) -> na::Point3<S> {
+fn point_max<S: Real>(p: &[na::Point3<S>]) -> na::Point3<S> {
     if p.len() == 1 {
         p[0]
     } else {
@@ -88,7 +88,7 @@ fn point_max<S: 'static + Float + Real + Debug>(p: &[na::Point3<S>]) -> na::Poin
     }
 }
 
-impl<S: 'static + Float + Real + Debug> BoundingBox<S> {
+impl<S: Float + Real> BoundingBox<S> {
     /// Returns an infinte sized box.
     pub fn infinity() -> BoundingBox<S> {
         BoundingBox {
