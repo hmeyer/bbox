@@ -1,4 +1,4 @@
-# stl_io
+# bbox
 [![Build Status](https://travis-ci.org/hmeyer/bbox.svg?branch=master)](https://travis-ci.org/hmeyer/bbox) [![Cargo](https://img.shields.io/crates/v/bbox.svg)](https://crates.io/crates/bbox) [![License: GPL-3.0](https://img.shields.io/crates/l/direct-gui.svg)](#license) [![Downloads](https://img.shields.io/crates/d/bbox.svg)](#downloads)
 
 
