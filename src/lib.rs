@@ -44,6 +44,7 @@
 //!                                          na::Point3::new(1., 2., 3.));
 //! let distance = bbox.distance(na::Point3::new(1., 1., 1.));
 //! ```
+#![warn(missing_docs)]
 extern crate alga;
 extern crate nalgebra as na;
 extern crate num_traits;
@@ -55,7 +56,9 @@ use std::fmt::Debug;
 /// 3D Bounding Box - defined by two diagonally opposing points.
 #[derive(Clone, Debug, PartialEq)]
 pub struct BoundingBox<S: Real + Debug> {
+    /// X-Y-Z-Minimum corner of the box.
     pub min: na::Point3<S>,
+    /// X-Y-Z-Maximum corner of the box.
     pub max: na::Point3<S>,
 }
 
