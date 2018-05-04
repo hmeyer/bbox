@@ -62,33 +62,27 @@ pub struct BoundingBox<S: Real + Debug> {
     pub max: na::Point3<S>,
 }
 
-fn point_min<S: Real>(p: &[na::Point3<S>]) -> na::Point3<S> {
-    if p.len() == 1 {
-        p[0]
-    } else {
-        let (p1, p2) = p.split_at(p.len() / 2);
-        let a = point_min(p1);
-        let b = point_min(p2);
-        na::Point3::<S>::new(
-            Real::min(a.x, b.x),
-            Real::min(a.y, b.y),
-            Real::min(a.z, b.z),
-        )
-    }
+fn point_min<S: Real + Float>(p: &[na::Point3<S>]) -> na::Point3<S> {
+    p.iter().fold(
+        na::Point3::<S>::new(S::infinity(), S::infinity(), S::infinity()),
+        |mut min, current| {
+            min.x = Real::min(min.x, current.x);
+            min.y = Real::min(min.y, current.y);
+            min.z = Real::min(min.z, current.z);
+            min
+        },
+    )
 }
-fn point_max<S: Real>(p: &[na::Point3<S>]) -> na::Point3<S> {
-    if p.len() == 1 {
-        p[0]
-    } else {
-        let (p1, p2) = p.split_at(p.len() / 2);
-        let a = point_max(p1);
-        let b = point_max(p2);
-        na::Point3::<S>::new(
-            Real::max(a.x, b.x),
-            Real::max(a.y, b.y),
-            Real::max(a.z, b.z),
-        )
-    }
+fn point_max<S: Real + Float>(p: &[na::Point3<S>]) -> na::Point3<S> {
+    p.iter().fold(
+        na::Point3::<S>::new(S::neg_infinity(), S::neg_infinity(), S::neg_infinity()),
+        |mut max, current| {
+            max.x = Real::max(max.x, current.x);
+            max.y = Real::max(max.y, current.y);
+            max.z = Real::max(max.z, current.z);
+            max
+        },
+    )
 }
 
 impl<S: Float + Real> BoundingBox<S> {
