@@ -162,7 +162,7 @@ impl<S: Float + Real> BoundingBox<S> {
         self
     }
     /// Add a Point to a Bounding Box, e.g. expand the Bounding Box to contain that point.
-    pub fn insert(&mut self, o: na::Point3<S>) -> &mut Self {
+    pub fn insert(&mut self, o: &na::Point3<S>) -> &mut Self {
         self.min.x = Real::min(self.min.x, o.x);
         self.min.y = Real::min(self.min.y, o.y);
         self.min.z = Real::min(self.min.z, o.z);
