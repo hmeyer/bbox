@@ -10,10 +10,10 @@
 //! ```rust,no_run
 //! extern crate nalgebra as na;
 //! extern crate bbox;
-//! let bbox1 = bbox::BoundingBox::<f64>::new(na::Point3::new(0., 0., 0.),
-//!                                                    na::Point3::new(1., 2., 3.));
-//! let bbox2 = bbox::BoundingBox::<f64>::new(na::Point3::new(-1., -2., -3.),
-//!                                                    na::Point3::new(3., 2., 1.));
+//! let bbox1 = bbox::BoundingBox::<f64>::new(&na::Point3::new(0., 0., 0.),
+//!                                           &na::Point3::new(1., 2., 3.));
+//! let bbox2 = bbox::BoundingBox::<f64>::new(&na::Point3::new(-1., -2., -3.),
+//!                                           &na::Point3::new(3., 2., 1.));
 //! let intersection = bbox1.intersection(&bbox2);
 //! ```
 //! Rotate a Bounding Box:
@@ -22,8 +22,8 @@
 //! extern crate nalgebra as na;
 //! extern crate bbox;
 //! let rotation = na::Rotation::from_euler_angles(10., 11., 12.).to_homogeneous();
-//! let bbox = bbox::BoundingBox::<f64>::new(na::Point3::new(0., 0., 0.),
-//!                                                   na::Point3::new(1., 2., 3.));
+//! let bbox = bbox::BoundingBox::<f64>::new(&na::Point3::new(0., 0., 0.),
+//!                                          &na::Point3::new(1., 2., 3.));
 //! let rotated_box = bbox.transform(&rotation);
 //! ```
 //! Is a point contained in the Box?
@@ -31,18 +31,18 @@
 //! ```rust,no_run
 //! extern crate nalgebra as na;
 //! extern crate bbox;
-//! let bbox = bbox::BoundingBox::<f64>::new(na::Point3::new(0., 0., 0.),
-//!                                          na::Point3::new(1., 2., 3.));
-//! let result = bbox.contains(na::Point3::new(1., 1., 1.));
+//! let bbox = bbox::BoundingBox::<f64>::new(&na::Point3::new(0., 0., 0.),
+//!                                          &na::Point3::new(1., 2., 3.));
+//! let result = bbox.contains(&na::Point3::new(1., 1., 1.));
 //! ```
 //! Calculate approximate distance of a point to the Box:
 //!
 //! ```rust,no_run
 //! extern crate nalgebra as na;
 //! extern crate bbox;
-//! let bbox = bbox::BoundingBox::<f64>::new(na::Point3::new(0., 0., 0.),
-//!                                          na::Point3::new(1., 2., 3.));
-//! let distance = bbox.distance(na::Point3::new(1., 1., 1.));
+//! let bbox = bbox::BoundingBox::<f64>::new(&na::Point3::new(0., 0., 0.),
+//!                                          &na::Point3::new(1., 2., 3.));
+//! let distance = bbox.distance(&na::Point3::new(1., 1., 1.));
 //! ```
 #![warn(missing_docs)]
 extern crate alga;
@@ -107,7 +107,7 @@ impl<S: Float + Real> BoundingBox<S> {
         }
     }
     /// Create a new Bounding Box by supplying two points.
-    pub fn new(a: na::Point3<S>, b: na::Point3<S>) -> BoundingBox<S> {
+    pub fn new(a: &na::Point3<S>, b: &na::Point3<S>) -> BoundingBox<S> {
         BoundingBox {
             min: na::Point3::<S>::new(
                 Real::min(a.x, b.x),
@@ -158,18 +158,24 @@ impl<S: Float + Real> BoundingBox<S> {
         }
     }
     /// Dilate a Bounding Box by some amount in all directions.
-    pub fn dilate(&self, d: S) -> BoundingBox<S> {
-        BoundingBox {
-            min: na::Point3::<S>::new(self.min.x - d, self.min.y - d, self.min.z - d),
-            max: na::Point3::<S>::new(self.max.x + d, self.max.y + d, self.max.z + d),
-        }
+    pub fn dilate(&mut self, d: S) -> &mut Self {
+        self.min.x -= d;
+        self.min.y -= d;
+        self.min.z -= d;
+        self.max.x += d;
+        self.max.y += d;
+        self.max.z += d;
+        self
     }
     /// Add a Point to a Bounding Box, e.g. expand the Bounding Box to contain that point.
-    pub fn insert(&self, o: na::Point3<S>) -> BoundingBox<S> {
-        BoundingBox {
-            min: point_min(&[self.min, o]),
-            max: point_max(&[self.max, o]),
-        }
+    pub fn insert(&mut self, o: na::Point3<S>) -> &mut Self {
+        self.min.x = Real::min(self.min.x, o.x);
+        self.min.y = Real::min(self.min.y, o.y);
+        self.min.z = Real::min(self.min.z, o.z);
+        self.max.x = Real::max(self.max.x, o.x);
+        self.max.y = Real::max(self.max.y, o.y);
+        self.max.z = Real::max(self.max.z, o.z);
+        self
     }
     /// Return the size of the Box.
     pub fn dim(&self) -> na::Vector3<S> {
@@ -177,7 +183,7 @@ impl<S: Float + Real> BoundingBox<S> {
     }
     /// Returns the approximate distance of p to the box. The result is guarateed to be not less
     /// than the euclidean distance of p to the box.
-    pub fn distance(&self, p: na::Point3<S>) -> S {
+    pub fn distance(&self, p: &na::Point3<S>) -> S {
         // If p is not inside (neg), then it is outside (pos) on only one side.
         // So so calculating the max of the diffs on both sides should result in the true value,
         // if positive.
@@ -187,7 +193,7 @@ impl<S: Float + Real> BoundingBox<S> {
         Real::max(xval, Real::max(yval, zval))
     }
     /// Return true if the Bounding Box contains p.
-    pub fn contains(&self, p: na::Point3<S>) -> bool {
+    pub fn contains(&self, p: &na::Point3<S>) -> bool {
         p.x >= self.min.x && p.x <= self.max.x && p.y >= self.min.y && p.y <= self.max.y
             && p.z >= self.min.z && p.z <= self.max.z
     }
