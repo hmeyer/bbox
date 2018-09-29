@@ -18,7 +18,7 @@
 //! ```
 //! Rotate a Bounding Box:
 //!
-//! ```rust,no_run
+//! ```rust
 //! extern crate nalgebra as na;
 //! extern crate bbox;
 //! let rotation = na::Rotation::from_euler_angles(10., 11., 12.).to_homogeneous();
@@ -28,7 +28,7 @@
 //! ```
 //! Is a point contained in the Box?
 //!
-//! ```rust,no_run
+//! ```rust
 //! extern crate nalgebra as na;
 //! extern crate bbox;
 //! let bbox = bbox::BoundingBox::<f64>::new(&na::Point3::new(0., 0., 0.),
@@ -37,7 +37,7 @@
 //! ```
 //! Calculate approximate distance of a point to the Box:
 //!
-//! ```rust,no_run
+//! ```rust
 //! extern crate nalgebra as na;
 //! extern crate bbox;
 //! let bbox = bbox::BoundingBox::<f64>::new(&na::Point3::new(0., 0., 0.),
