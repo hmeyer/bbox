@@ -49,7 +49,7 @@ notifications:
     on_failure: always
 
 script:
-  - cargo build
+  - cargo build --verbose
   - cargo test
 
 # Coverage report
