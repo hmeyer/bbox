@@ -35,7 +35,6 @@ matrix:
 
 # The main build
 script:
-  - cargo clippy
   - cargo build
   - cargo test
 
