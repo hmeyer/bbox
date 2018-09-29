@@ -29,6 +29,10 @@ rust:
   - beta
   - stable
 
+matrix:
+  allow_failures:
+    - rust: nightly
+
 # Add clippy
 before_script:
   - |
