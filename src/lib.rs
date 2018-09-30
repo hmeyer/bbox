@@ -48,8 +48,14 @@
 extern crate alga;
 extern crate nalgebra as na;
 extern crate num_traits;
+#[cfg(test)]
+#[macro_use]
+extern crate approx;
+#[cfg(not(test))]
+extern crate approx;
 
 use alga::general::Real;
+use approx::{AbsDiffEq, RelativeEq};
 use num_traits::Float;
 use std::fmt::Debug;
 
@@ -188,7 +194,120 @@ impl<S: Float + Real> BoundingBox<S> {
     }
     /// Return true if the Bounding Box contains p.
     pub fn contains(&self, p: &na::Point3<S>) -> bool {
-        p.x >= self.min.x && p.x <= self.max.x && p.y >= self.min.y && p.y <= self.max.y
-            && p.z >= self.min.z && p.z <= self.max.z
+        p.x >= self.min.x
+            && p.x <= self.max.x
+            && p.y >= self.min.y
+            && p.y <= self.max.y
+            && p.z >= self.min.z
+            && p.z <= self.max.z
+    }
+}
+
+impl<T: Float + Real> AbsDiffEq for BoundingBox<T>
+where
+    <T as AbsDiffEq>::Epsilon: Copy,
+    T: AbsDiffEq,
+{
+    type Epsilon = <T as AbsDiffEq>::Epsilon;
+
+    fn default_epsilon() -> Self::Epsilon {
+        <T as AbsDiffEq>::default_epsilon()
+    }
+
+    fn abs_diff_eq(&self, other: &Self, epsilon: Self::Epsilon) -> bool {
+        na::Point3::abs_diff_eq(&self.min, &other.min, epsilon)
+            && na::Point3::abs_diff_eq(&self.max, &other.max, epsilon)
+    }
+}
+
+impl<T: Float + Real> RelativeEq for BoundingBox<T>
+where
+    <T as AbsDiffEq>::Epsilon: Copy,
+    T: RelativeEq,
+{
+    fn default_max_relative() -> <T as AbsDiffEq>::Epsilon {
+        <T as RelativeEq>::default_max_relative()
+    }
+
+    fn relative_eq(
+        &self,
+        other: &Self,
+        epsilon: <T as AbsDiffEq>::Epsilon,
+        max_relative: <T as AbsDiffEq>::Epsilon,
+    ) -> bool {
+        na::Point3::relative_eq(&self.min, &other.min, epsilon, max_relative)
+            && na::Point3::relative_eq(&self.max, &other.max, epsilon, max_relative)
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn simple_box() {
+        let bbox =
+            BoundingBox::<f64>::new(&na::Point3::new(0., 0., 0.), &na::Point3::new(1., 2., 3.));
+        assert!(bbox.contains(&na::Point3::new(0., 0., 0.)));
+        assert!(bbox.contains(&na::Point3::new(0., 1., 0.)));
+        assert!(bbox.contains(&na::Point3::new(1., 0., 1.)));
+        assert!(bbox.contains(&na::Point3::new(1., 1., 1.)));
+        assert!(!bbox.contains(&na::Point3::new(2., 2., 2.)));
+        assert!(!bbox.contains(&na::Point3::new(-1., -1., -1.)));
+    }
+
+    #[test]
+    fn transform() {
+        let bbox =
+            BoundingBox::<f64>::new(&na::Point3::new(0., 0., 0.), &na::Point3::new(1., 1., 1.));
+        assert_relative_eq!(
+            bbox.transform(
+                &na::Rotation::from_euler_angles(::std::f64::consts::PI / 2., 0., 0.)
+                    .to_homogeneous()
+            ),
+            BoundingBox::<f64>::new(&na::Point3::new(0., -1., 0.), &na::Point3::new(1., 0., 1.),)
+        );
+        assert_relative_eq!(
+            bbox.transform(
+                &na::Matrix4::identity().append_nonuniform_scaling(&na::Vector3::new(1., 2., 3.))
+            ),
+            BoundingBox::<f64>::new(&na::Point3::new(0., 0., 0.), &na::Point3::new(1., 2., 3.),)
+        );
+    }
+
+    #[test]
+    fn boolean() {
+        let bbox1 =
+            BoundingBox::<f64>::new(&na::Point3::new(0., 0., 0.), &na::Point3::new(4., 8., 16.));
+        let bbox2 =
+            BoundingBox::<f64>::new(&na::Point3::new(2., 2., 2.), &na::Point3::new(16., 4., 8.));
+        assert_relative_eq!(
+            bbox1.union(&bbox2),
+            BoundingBox::<f64>::new(&na::Point3::new(0., 0., 0.), &na::Point3::new(16., 8., 16.),)
+        );
+        assert_relative_eq!(
+            bbox1.intersection(&bbox2),
+            BoundingBox::<f64>::new(&na::Point3::new(2., 2., 2.), &na::Point3::new(4., 4., 8.),)
+        );
+    }
+
+    #[test]
+    fn dilate() {
+        let mut bbox =
+            BoundingBox::<f64>::new(&na::Point3::new(0., 0., 0.), &na::Point3::new(1., 1., 1.));
+        assert_relative_eq!(
+            bbox.dilate(0.1),
+            &mut BoundingBox::<f64>::new(
+                &na::Point3::new(-0.1, -0.1, -0.1),
+                &na::Point3::new(1.1, 1.1, 1.1),
+            )
+        );
+        assert_relative_eq!(
+            bbox.dilate(-0.5),
+            &mut BoundingBox::<f64>::new(
+                &na::Point3::new(0.4, 0.4, 0.4),
+                &na::Point3::new(0.6, 0.6, 0.6),
+            )
+        );
     }
 }

@@ -1,6 +1,6 @@
 [package]
 name = "bbox"
-version = "0.8.2"
+version = "0.9.0"
 authors = ["Henning Meyer <tutmann@gmail.com>"]
 
 description = "Managing axis aligned 3d Bounding Boxes."
@@ -14,6 +14,7 @@ name = "bbox"
 path = "src/lib.rs"
 
 [dependencies]
-nalgebra = "0.14"
-alga = "0.5"
+nalgebra = "0.16"
+alga = "0.7"
 num-traits = "0.2"
+approx = "0.3"
