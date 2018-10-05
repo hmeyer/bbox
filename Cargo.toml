@@ -1,6 +1,6 @@
 [package]
 name = "bbox"
-version = "0.9.0"
+version = "0.9.1"
 authors = ["Henning Meyer <tutmann@gmail.com>"]
 
 description = "Managing axis aligned 3d Bounding Boxes."
@@ -18,3 +18,7 @@ nalgebra = "0.16"
 alga = "0.7"
 num-traits = "0.2"
 approx = "0.3"
+
+[badges]
+travis-ci = { repository = "hmeyer/bbox", branch = "master" }
+codecov = { repository = "hmeyer/bbox", branch = "master", service = "github" }
