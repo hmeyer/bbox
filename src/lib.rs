@@ -8,8 +8,7 @@
 //! Intersect two Bounding Boxes:
 //!
 //! ```rust,no_run
-//! extern crate nalgebra as na;
-//! extern crate bbox;
+//! use nalgebra as na;
 //! let bbox1 = bbox::BoundingBox::<f64>::new(&na::Point3::new(0., 0., 0.),
 //!                                           &na::Point3::new(1., 2., 3.));
 //! let bbox2 = bbox::BoundingBox::<f64>::new(&na::Point3::new(-1., -2., -3.),
@@ -19,8 +18,7 @@
 //! Rotate a Bounding Box:
 //!
 //! ```rust
-//! extern crate nalgebra as na;
-//! extern crate bbox;
+//! use nalgebra as na;
 //! let rotation = na::Rotation::from_euler_angles(10., 11., 12.).to_homogeneous();
 //! let bbox = bbox::BoundingBox::<f64>::new(&na::Point3::new(0., 0., 0.),
 //!                                          &na::Point3::new(1., 2., 3.));
@@ -29,8 +27,7 @@
 //! Is a point contained in the Box?
 //!
 //! ```rust
-//! extern crate nalgebra as na;
-//! extern crate bbox;
+//! use nalgebra as na;
 //! let bbox = bbox::BoundingBox::<f64>::new(&na::Point3::new(0., 0., 0.),
 //!                                          &na::Point3::new(1., 2., 3.));
 //! let result = bbox.contains(&na::Point3::new(1., 1., 1.));
@@ -38,60 +35,56 @@
 //! Calculate approximate distance of a point to the Box:
 //!
 //! ```rust
-//! extern crate nalgebra as na;
-//! extern crate bbox;
+//! use nalgebra as na;
 //! let bbox = bbox::BoundingBox::<f64>::new(&na::Point3::new(0., 0., 0.),
 //!                                          &na::Point3::new(1., 2., 3.));
 //! let distance = bbox.distance(&na::Point3::new(1., 1., 1.));
 //! ```
 #![warn(missing_docs)]
-extern crate alga;
-extern crate nalgebra as na;
-extern crate num_traits;
+use nalgebra as na;
 #[cfg(test)]
 #[macro_use]
 extern crate approx;
 #[cfg(not(test))]
 extern crate approx;
 
-use alga::general::RealField;
 use approx::{AbsDiffEq, RelativeEq};
 use num_traits::Float;
 use std::fmt::Debug;
 
 /// 3D Bounding Box - defined by two diagonally opposing points.
 #[derive(Clone, Debug, PartialEq)]
-pub struct BoundingBox<S: RealField + Debug> {
+pub struct BoundingBox<S: 'static + Debug + Copy + PartialEq> {
     /// X-Y-Z-Minimum corner of the box.
     pub min: na::Point3<S>,
     /// X-Y-Z-Maximum corner of the box.
     pub max: na::Point3<S>,
 }
 
-fn point_min<S: RealField + Float>(p: &[na::Point3<S>]) -> na::Point3<S> {
+fn point_min<S: 'static + Float + Debug>(p: &[na::Point3<S>]) -> na::Point3<S> {
     p.iter().fold(
         na::Point3::<S>::new(S::infinity(), S::infinity(), S::infinity()),
         |mut min, current| {
-            min.x = RealField::min(min.x, current.x);
-            min.y = RealField::min(min.y, current.y);
-            min.z = RealField::min(min.z, current.z);
+            min.x = min.x.min(current.x);
+            min.y = min.y.min(current.y);
+            min.z = min.z.min(current.z);
             min
         },
     )
 }
-fn point_max<S: RealField + Float>(p: &[na::Point3<S>]) -> na::Point3<S> {
+fn point_max<S: 'static + Float + Debug>(p: &[na::Point3<S>]) -> na::Point3<S> {
     p.iter().fold(
         na::Point3::<S>::new(S::neg_infinity(), S::neg_infinity(), S::neg_infinity()),
         |mut max, current| {
-            max.x = RealField::max(max.x, current.x);
-            max.y = RealField::max(max.y, current.y);
-            max.z = RealField::max(max.z, current.z);
+            max.x = max.x.max(current.x);
+            max.y = max.y.max(current.y);
+            max.z = max.z.max(current.z);
             max
         },
     )
 }
 
-impl<S: Float + RealField> BoundingBox<S> {
+impl<S: Float + Debug + na::RealField> BoundingBox<S> {
     /// Returns an infinte sized box.
     pub fn infinity() -> BoundingBox<S> {
         BoundingBox {
@@ -110,14 +103,14 @@ impl<S: Float + RealField> BoundingBox<S> {
     pub fn new(a: &na::Point3<S>, b: &na::Point3<S>) -> BoundingBox<S> {
         BoundingBox {
             min: na::Point3::<S>::new(
-                RealField::min(a.x, b.x),
-                RealField::min(a.y, b.y),
-                RealField::min(a.z, b.z),
+                Float::min(a.x, b.x),
+                Float::min(a.y, b.y),
+                Float::min(a.z, b.z),
             ),
             max: na::Point3::<S>::new(
-                RealField::max(a.x, b.x),
-                RealField::max(a.y, b.y),
-                RealField::max(a.z, b.z),
+                Float::max(a.x, b.x),
+                Float::max(a.y, b.y),
+                Float::max(a.z, b.z),
             ),
         }
     }
@@ -169,12 +162,12 @@ impl<S: Float + RealField> BoundingBox<S> {
     }
     /// Add a Point to a Bounding Box, e.g. expand the Bounding Box to contain that point.
     pub fn insert(&mut self, o: &na::Point3<S>) -> &mut Self {
-        self.min.x = RealField::min(self.min.x, o.x);
-        self.min.y = RealField::min(self.min.y, o.y);
-        self.min.z = RealField::min(self.min.z, o.z);
-        self.max.x = RealField::max(self.max.x, o.x);
-        self.max.y = RealField::max(self.max.y, o.y);
-        self.max.z = RealField::max(self.max.z, o.z);
+        self.min.x = Float::min(self.min.x, o.x);
+        self.min.y = Float::min(self.min.y, o.y);
+        self.min.z = Float::min(self.min.z, o.z);
+        self.max.x = Float::max(self.max.x, o.x);
+        self.max.y = Float::max(self.max.y, o.y);
+        self.max.z = Float::max(self.max.z, o.z);
         self
     }
     /// Return the size of the Box.
@@ -187,10 +180,10 @@ impl<S: Float + RealField> BoundingBox<S> {
         // If p is not inside (neg), then it is outside (pos) on only one side.
         // So so calculating the max of the diffs on both sides should result in the true value,
         // if positive.
-        let xval = RealField::max(p.x - self.max.x, self.min.x - p.x);
-        let yval = RealField::max(p.y - self.max.y, self.min.y - p.y);
-        let zval = RealField::max(p.z - self.max.z, self.min.z - p.z);
-        RealField::max(xval, RealField::max(yval, zval))
+        let xval = Float::max(p.x - self.max.x, self.min.x - p.x);
+        let yval = Float::max(p.y - self.max.y, self.min.y - p.y);
+        let zval = Float::max(p.z - self.max.z, self.min.z - p.z);
+        Float::max(xval, Float::max(yval, zval))
     }
     /// Return true if the Bounding Box contains p.
     pub fn contains(&self, p: &na::Point3<S>) -> bool {
@@ -203,10 +196,10 @@ impl<S: Float + RealField> BoundingBox<S> {
     }
 }
 
-impl<T: Float + RealField> AbsDiffEq for BoundingBox<T>
+impl<T: Float> AbsDiffEq for BoundingBox<T>
 where
     <T as AbsDiffEq>::Epsilon: Copy,
-    T: AbsDiffEq,
+    T: AbsDiffEq + Debug,
 {
     type Epsilon = <T as AbsDiffEq>::Epsilon;
 
@@ -220,10 +213,10 @@ where
     }
 }
 
-impl<T: Float + RealField> RelativeEq for BoundingBox<T>
+impl<T: Float> RelativeEq for BoundingBox<T>
 where
     <T as AbsDiffEq>::Epsilon: Copy,
-    T: RelativeEq,
+    T: RelativeEq + Debug,
 {
     fn default_max_relative() -> <T as AbsDiffEq>::Epsilon {
         <T as RelativeEq>::default_max_relative()

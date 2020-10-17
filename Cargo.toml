@@ -2,18 +2,20 @@
 name = "bbox"
 version = "0.9.2"
 authors = ["Henning Meyer <tutmann@gmail.com>"]
+edition = "2018"
 
 description = "Managing axis aligned 3d Bounding Boxes."
 repository = "https://github.com/hmeyer/bbox"
 readme = "README.md"
 keywords = ["boundingbox", "3d", "csg", "union", "intersection"]
-license = "GPL-3.0"
+license = "Apache-2.0 OR MIT"
 
 [lib]
 name = "bbox"
 path = "src/lib.rs"
 
 [dependencies]
+# nalgebra = { version = "0.22.1", features = ["alga"] }
 nalgebra = "0.19"
 alga = "0.9"
 num-traits = "0.2"
