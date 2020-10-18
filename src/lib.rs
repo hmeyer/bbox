@@ -22,7 +22,7 @@
 //! let rotation = na::Rotation::from_euler_angles(10., 11., 12.);
 //! let bbox = bbox::BoundingBox::<f64>::new(&na::Point3::new(0., 0., 0.),
 //!                                          &na::Point3::new(1., 2., 3.));
-//! let rotated_box = bbox.transform(&rotation);
+//! let rotated_box = bbox.transform(&rotation.to_homogeneous());
 //! ```
 //! Is a point contained in the Box?
 //!
@@ -129,10 +129,7 @@ impl<S: Float + Debug + na::RealField + alga::general::RealField> BoundingBox<S>
         }
     }
     /// Transform a Bounding Box - resulting in a enclosing axis aligned Bounding Box.
-    pub fn transform<M>(&self, mat: &M) -> BoundingBox<S>
-    where
-        M: alga::linear::Transformation<na::Point3<S>>,
-    {
+    pub fn transform(&self, mat: &na::Matrix4<S>) -> BoundingBox<S> {
         let a = &self.min;
         let b = &self.max;
         let corners = [
@@ -254,15 +251,14 @@ mod test {
         let bbox =
             BoundingBox::<f64>::new(&na::Point3::new(0., 0., 0.), &na::Point3::new(1., 1., 1.));
         assert_relative_eq!(
-            bbox.transform(&na::Rotation::from_euler_angles(
-                ::std::f64::consts::PI / 2.,
-                0.,
-                0.
-            )),
+            bbox.transform(
+                &na::Rotation::from_euler_angles(::std::f64::consts::PI / 2., 0., 0.)
+                    .to_homogeneous()
+            ),
             BoundingBox::<f64>::new(&na::Point3::new(0., -1., 0.), &na::Point3::new(1., 0., 1.),)
         );
         assert_relative_eq!(
-            bbox.transform(&na::Translation3::new(1., 2., 3.)),
+            bbox.transform(&na::Translation3::new(1., 2., 3.).to_homogeneous()),
             BoundingBox::<f64>::new(&na::Point3::new(1., 2., 3.), &na::Point3::new(2., 3., 4.),)
         );
     }
