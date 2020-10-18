@@ -1,6 +1,6 @@
 [package]
 name = "bbox"
-version = "0.10.0"
+version = "0.11.0"
 authors = ["Henning Meyer <tutmann@gmail.com>"]
 edition = "2018"
 
@@ -15,8 +15,7 @@ name = "bbox"
 path = "src/lib.rs"
 
 [dependencies]
-# nalgebra = { version = "0.22.1", features = ["alga"] }
-nalgebra = "0.19"
+nalgebra = { version = "0.22", features = ["alga"] }
 alga = "0.9"
 num-traits = "0.2"
 approx = "0.3"

@@ -19,7 +19,7 @@
 //!
 //! ```rust
 //! use nalgebra as na;
-//! let rotation = na::Rotation::from_euler_angles(10., 11., 12.).to_homogeneous();
+//! let rotation = na::Rotation::from_euler_angles(10., 11., 12.);
 //! let bbox = bbox::BoundingBox::<f64>::new(&na::Point3::new(0., 0., 0.),
 //!                                          &na::Point3::new(1., 2., 3.));
 //! let rotated_box = bbox.transform(&rotation);
@@ -84,7 +84,7 @@ fn point_max<S: 'static + Float + Debug>(p: &[na::Point3<S>]) -> na::Point3<S> {
     )
 }
 
-impl<S: Float + Debug + na::RealField> BoundingBox<S> {
+impl<S: Float + Debug + na::RealField + alga::general::RealField> BoundingBox<S> {
     /// Returns an infinte sized box.
     pub fn infinity() -> BoundingBox<S> {
         BoundingBox {
@@ -254,17 +254,16 @@ mod test {
         let bbox =
             BoundingBox::<f64>::new(&na::Point3::new(0., 0., 0.), &na::Point3::new(1., 1., 1.));
         assert_relative_eq!(
-            bbox.transform(
-                &na::Rotation::from_euler_angles(::std::f64::consts::PI / 2., 0., 0.)
-                    .to_homogeneous()
-            ),
+            bbox.transform(&na::Rotation::from_euler_angles(
+                ::std::f64::consts::PI / 2.,
+                0.,
+                0.
+            )),
             BoundingBox::<f64>::new(&na::Point3::new(0., -1., 0.), &na::Point3::new(1., 0., 1.),)
         );
         assert_relative_eq!(
-            bbox.transform(
-                &na::Matrix4::identity().append_nonuniform_scaling(&na::Vector3::new(1., 2., 3.))
-            ),
-            BoundingBox::<f64>::new(&na::Point3::new(0., 0., 0.), &na::Point3::new(1., 2., 3.),)
+            bbox.transform(&na::Translation3::new(1., 2., 3.)),
+            BoundingBox::<f64>::new(&na::Point3::new(1., 2., 3.), &na::Point3::new(2., 3., 4.),)
         );
     }
 
