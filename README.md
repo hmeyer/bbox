@@ -1,5 +1,9 @@
 # bbox
-[![Build Status](https://travis-ci.org/hmeyer/bbox.svg?branch=master)](https://travis-ci.org/hmeyer/bbox) [![Cargo](https://img.shields.io/crates/v/bbox.svg)](https://crates.io/crates/bbox) [![License: GPL-3.0](https://img.shields.io/crates/l/direct-gui.svg)](#license) [![Downloads](https://img.shields.io/crates/d/bbox.svg)](#downloads)
+[![Build Status](https://travis-ci.org/hmeyer/bbox.svg?branch=master)](https://travis-ci.org/hmeyer/bbox)
+[![Cargo](https://img.shields.io/crates/v/bbox.svg)](https://crates.io/crates/bbox)
+[![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Downloads](https://img.shields.io/crates/d/bbox.svg)](#downloads)
 
 
 bbox is crate for managing axis aligned 3d Bounding Boxes.
