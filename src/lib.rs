@@ -45,8 +45,7 @@ use nalgebra as na;
 #[cfg(test)]
 #[macro_use]
 extern crate approx;
-#[cfg(not(test))]
-extern crate approx;
+
 
 use approx::{AbsDiffEq, RelativeEq};
 use num_traits::Float;
