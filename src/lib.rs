@@ -40,6 +40,10 @@
 //!                                          &na::Point3::new(1., 2., 3.));
 //! let distance = bbox.distance(&na::Point3::new(1., 1., 1.));
 //! ```
+//! ## Cargo Features
+//!
+//! * `mint` - Enable interoperation with other math libraries through the
+//!   [`mint`](https://crates.io/crates/mint) interface.
 #![warn(missing_docs)]
 use nalgebra as na;
 #[cfg(test)]
