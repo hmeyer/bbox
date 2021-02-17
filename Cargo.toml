@@ -14,11 +14,14 @@ license = "Apache-2.0 OR MIT"
 name = "bbox"
 path = "src/lib.rs"
 
+[features]
+mint = ["nalgebra/mint"]
+
 [dependencies]
-nalgebra = { version = "0.22", features = ["alga"] }
+nalgebra = { version = "0.24", features = ["alga"] }
 alga = "0.9"
 num-traits = "0.2"
-approx = "0.3"
+approx = "0.4"
 
 [badges]
 travis-ci = { repository = "hmeyer/bbox", branch = "master" }

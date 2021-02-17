@@ -49,6 +49,11 @@ let bbox = bbox::BoundingBox::<f64>::new(na::Point3::new(0., 0., 0.),
 let distance = bbox.distance(na::Point3::new(1., 1., 1.));
 ```
 
+## Cargo Features
+
+* `mint` - Enable interoperation with other math libraries through the
+  [`mint`](https://crates.io/crates/mint) interface.
+
 #### License
 
 <sup>
