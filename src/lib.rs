@@ -87,7 +87,7 @@ fn point_max<S: 'static + Float + Debug>(p: &[na::Point3<S>]) -> na::Point3<S> {
     )
 }
 
-impl<S: Float + Debug + na::RealField + alga::general::RealField> BoundingBox<S> {
+impl<S: Float + Debug + na::RealField + simba::scalar::RealField> BoundingBox<S> {
     /// Returns an infinte sized box.
     pub fn infinity() -> BoundingBox<S> {
         BoundingBox {
