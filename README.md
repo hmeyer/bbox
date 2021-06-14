@@ -1,5 +1,5 @@
 # bbox
-[![Build Status](https://travis-ci.org/hmeyer/bbox.svg?branch=master)](https://travis-ci.org/hmeyer/bbox)
+![build workflow](https://github.com/hmeyer/bbox/actions/workflows/rust.yml/badge.svg)
 [![Cargo](https://img.shields.io/crates/v/bbox.svg)](https://crates.io/crates/bbox)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
