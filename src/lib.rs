@@ -236,7 +236,7 @@ mod test {
     use approx::assert_relative_eq;
 
     #[test]
-    fn simple_box() {
+    fn box_contains_points_inside() {
         let bbox =
             BoundingBox::<f64>::new(&na::Point3::new(0., 0., 0.), &na::Point3::new(1., 2., 3.));
         assert!(bbox.contains(&na::Point3::new(0., 0., 0.)));
@@ -248,7 +248,17 @@ mod test {
     }
 
     #[test]
-    fn transform() {
+    fn transform_with_translation() {
+        let bbox =
+            BoundingBox::<f64>::new(&na::Point3::new(0., 0., 0.), &na::Point3::new(1., 1., 1.));
+        assert_relative_eq!(
+            bbox.transform(&na::Translation3::new(1., 2., 3.).to_homogeneous()),
+            BoundingBox::<f64>::new(&na::Point3::new(1., 2., 3.), &na::Point3::new(2., 3., 4.),)
+        );
+    }
+
+    #[test]
+    fn transform_with_rotation() {
         let bbox =
             BoundingBox::<f64>::new(&na::Point3::new(0., 0., 0.), &na::Point3::new(1., 1., 1.));
         assert_relative_eq!(
@@ -258,14 +268,10 @@ mod test {
             ),
             BoundingBox::<f64>::new(&na::Point3::new(0., -1., 0.), &na::Point3::new(1., 0., 1.),)
         );
-        assert_relative_eq!(
-            bbox.transform(&na::Translation3::new(1., 2., 3.).to_homogeneous()),
-            BoundingBox::<f64>::new(&na::Point3::new(1., 2., 3.), &na::Point3::new(2., 3., 4.),)
-        );
     }
 
     #[test]
-    fn boolean() {
+    fn union_of_two_boxes() {
         let bbox1 =
             BoundingBox::<f64>::new(&na::Point3::new(0., 0., 0.), &na::Point3::new(4., 8., 16.));
         let bbox2 =
@@ -274,6 +280,14 @@ mod test {
             bbox1.union(&bbox2),
             BoundingBox::<f64>::new(&na::Point3::new(0., 0., 0.), &na::Point3::new(16., 8., 16.),)
         );
+    }
+
+    #[test]
+    fn intersection_of_two_boxes() {
+        let bbox1 =
+            BoundingBox::<f64>::new(&na::Point3::new(0., 0., 0.), &na::Point3::new(4., 8., 16.));
+        let bbox2 =
+            BoundingBox::<f64>::new(&na::Point3::new(2., 2., 2.), &na::Point3::new(16., 4., 8.));
         assert_relative_eq!(
             bbox1.intersection(&bbox2),
             BoundingBox::<f64>::new(&na::Point3::new(2., 2., 2.), &na::Point3::new(4., 4., 8.),)
