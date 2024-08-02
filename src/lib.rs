@@ -313,4 +313,17 @@ mod test {
             )
         );
     }
+
+    #[test]
+    fn box_contains_inserted_points() {
+        let mut bbox = BoundingBox::neg_infinity();
+        let p1 = na::Point3::new(1., 0., 0.);
+        let p2 = na::Point3::new(0., 2., 3.);
+        assert!(!bbox.contains(&p1));
+        bbox.insert(&p1);
+        assert!(bbox.contains(&p1));
+        assert!(!bbox.contains(&p2));
+        bbox.insert(&p2);
+        assert!(bbox.contains(&p2));
+    }
 }
