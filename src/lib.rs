@@ -44,14 +44,11 @@
 //!
 //! * `mint` - Enable interoperation with other math libraries through the
 //!   [`mint`](https://crates.io/crates/mint) interface.
-#![warn(missing_docs)]
-use nalgebra as na;
-#[cfg(test)]
-#[macro_use]
-extern crate approx;
 
+#![warn(missing_docs)]
 
 use approx::{AbsDiffEq, RelativeEq};
+use nalgebra as na;
 use num_traits::Float;
 use std::fmt::Debug;
 
@@ -236,6 +233,7 @@ where
 #[cfg(test)]
 mod test {
     use super::*;
+    use approx::assert_relative_eq;
 
     #[test]
     fn simple_box() {
