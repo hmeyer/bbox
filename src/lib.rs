@@ -44,14 +44,11 @@
 //!
 //! * `mint` - Enable interoperation with other math libraries through the
 //!   [`mint`](https://crates.io/crates/mint) interface.
-#![warn(missing_docs)]
-use nalgebra as na;
-#[cfg(test)]
-#[macro_use]
-extern crate approx;
 
+#![warn(missing_docs)]
 
 use approx::{AbsDiffEq, RelativeEq};
+use nalgebra as na;
 use num_traits::Float;
 use std::fmt::Debug;
 
@@ -236,9 +233,10 @@ where
 #[cfg(test)]
 mod test {
     use super::*;
+    use approx::assert_relative_eq;
 
     #[test]
-    fn simple_box() {
+    fn box_contains_points_inside() {
         let bbox =
             BoundingBox::<f64>::new(&na::Point3::new(0., 0., 0.), &na::Point3::new(1., 2., 3.));
         assert!(bbox.contains(&na::Point3::new(0., 0., 0.)));
@@ -250,7 +248,17 @@ mod test {
     }
 
     #[test]
-    fn transform() {
+    fn transform_with_translation() {
+        let bbox =
+            BoundingBox::<f64>::new(&na::Point3::new(0., 0., 0.), &na::Point3::new(1., 1., 1.));
+        assert_relative_eq!(
+            bbox.transform(&na::Translation3::new(1., 2., 3.).to_homogeneous()),
+            BoundingBox::<f64>::new(&na::Point3::new(1., 2., 3.), &na::Point3::new(2., 3., 4.),)
+        );
+    }
+
+    #[test]
+    fn transform_with_rotation() {
         let bbox =
             BoundingBox::<f64>::new(&na::Point3::new(0., 0., 0.), &na::Point3::new(1., 1., 1.));
         assert_relative_eq!(
@@ -260,14 +268,10 @@ mod test {
             ),
             BoundingBox::<f64>::new(&na::Point3::new(0., -1., 0.), &na::Point3::new(1., 0., 1.),)
         );
-        assert_relative_eq!(
-            bbox.transform(&na::Translation3::new(1., 2., 3.).to_homogeneous()),
-            BoundingBox::<f64>::new(&na::Point3::new(1., 2., 3.), &na::Point3::new(2., 3., 4.),)
-        );
     }
 
     #[test]
-    fn boolean() {
+    fn union_of_two_boxes() {
         let bbox1 =
             BoundingBox::<f64>::new(&na::Point3::new(0., 0., 0.), &na::Point3::new(4., 8., 16.));
         let bbox2 =
@@ -276,6 +280,14 @@ mod test {
             bbox1.union(&bbox2),
             BoundingBox::<f64>::new(&na::Point3::new(0., 0., 0.), &na::Point3::new(16., 8., 16.),)
         );
+    }
+
+    #[test]
+    fn intersection_of_two_boxes() {
+        let bbox1 =
+            BoundingBox::<f64>::new(&na::Point3::new(0., 0., 0.), &na::Point3::new(4., 8., 16.));
+        let bbox2 =
+            BoundingBox::<f64>::new(&na::Point3::new(2., 2., 2.), &na::Point3::new(16., 4., 8.));
         assert_relative_eq!(
             bbox1.intersection(&bbox2),
             BoundingBox::<f64>::new(&na::Point3::new(2., 2., 2.), &na::Point3::new(4., 4., 8.),)
@@ -300,5 +312,18 @@ mod test {
                 &na::Point3::new(0.6, 0.6, 0.6),
             )
         );
+    }
+
+    #[test]
+    fn box_contains_inserted_points() {
+        let mut bbox = BoundingBox::neg_infinity();
+        let p1 = na::Point3::new(1., 0., 0.);
+        let p2 = na::Point3::new(0., 2., 3.);
+        assert!(!bbox.contains(&p1));
+        bbox.insert(&p1);
+        assert!(bbox.contains(&p1));
+        assert!(!bbox.contains(&p2));
+        bbox.insert(&p2);
+        assert!(bbox.contains(&p2));
     }
 }
