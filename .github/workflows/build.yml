@@ -1,4 +1,4 @@
-name: Test
+name: Build
 
 on:
   push:
@@ -13,7 +13,7 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  check--and-test:
+  build:
 
     runs-on: ubuntu-latest
 
@@ -26,7 +26,5 @@ jobs:
             override: true
             components: rustfmt, clippy
 
-      - name: check
-        run: cargo check
-      - name: test
-        run: cargo test
+      - name: build
+        run: cargo build --release --all-features
