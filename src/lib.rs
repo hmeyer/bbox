@@ -84,6 +84,15 @@ fn point_max<S: 'static + Float + Debug>(p: &[na::Point3<S>]) -> na::Point3<S> {
     )
 }
 
+impl<S: Float + na::RealField, T: AsRef<[na::Point3<S>]>> From<T> for BoundingBox<S> {
+    fn from(points: T) -> BoundingBox<S> {
+        BoundingBox {
+            min: point_min(points.as_ref()),
+            max: point_max(points.as_ref()),
+        }
+    }
+}
+
 impl<S: Float + Debug + na::RealField + simba::scalar::RealField> BoundingBox<S> {
     /// Returns an infinte sized box.
     pub fn infinity() -> BoundingBox<S> {
@@ -245,6 +254,23 @@ mod test {
         assert!(bbox.contains(&na::Point3::new(1., 1., 1.)));
         assert!(!bbox.contains(&na::Point3::new(2., 2., 2.)));
         assert!(!bbox.contains(&na::Point3::new(-1., -1., -1.)));
+    }
+
+    #[test]
+    fn box_from_points() {
+        let points = [
+            na::Point3::new(0., 0., 0.),
+            na::Point3::new(1., 1., 0.),
+            na::Point3::new(0., -2., 2.),
+        ];
+        for bbox in [
+            BoundingBox::from(points),            // from array
+            BoundingBox::from(&points[..]),       // from slice
+            BoundingBox::from(Vec::from(points)), // from vector
+        ] {
+            assert_relative_eq!(bbox.min, na::Point3::new(0., -2., 0.));
+            assert_relative_eq!(bbox.max, na::Point3::new(1., 1., 2.));
+        }
     }
 
     #[test]
