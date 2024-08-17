@@ -140,6 +140,15 @@ impl<S: Float + Debug + na::RealField + simba::scalar::RealField> BoundingBox<S>
     pub fn is_empty(&self) -> bool {
         self.min > self.max
     }
+    /// Returns true if the Bounding Box has finite size.
+    pub fn is_finite(&self) -> bool {
+        self.min.x.is_finite()
+            && self.min.y.is_finite()
+            && self.min.z.is_finite()
+            && self.max.x.is_finite()
+            && self.max.y.is_finite()
+            && self.max.z.is_finite()
+    }
     /// Create a CSG Union of two Bounding Boxes.
     pub fn union(&self, other: &BoundingBox<S>) -> BoundingBox<S> {
         BoundingBox {
@@ -313,6 +322,19 @@ mod test {
         assert!(bbox.is_empty());
         let bbox = BoundingBox::<f64>::from([na::Point3::new(0., 0., 0.)]);
         assert!(!bbox.is_empty());
+    }
+
+    #[test]
+    fn is_finite() {
+        let bbox = BoundingBox::<f64>::neg_infinity();
+        assert!(!bbox.is_finite());
+        let bbox = BoundingBox::<f64>::from([na::Point3::new(0., 0., 0.)]);
+        assert!(bbox.is_finite());
+        let bbox = BoundingBox::<f64>::new(
+            &na::Point3::new(0., 0., 0.),
+            &na::Point3::new(f64::INFINITY, 1., 1.),
+        );
+        assert!(!bbox.is_finite());
     }
 
     #[test]
