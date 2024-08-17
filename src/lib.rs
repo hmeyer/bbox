@@ -150,6 +150,19 @@ impl<S: Float + Debug + na::RealField + simba::scalar::RealField> BoundingBox<S>
             max: point_min(&[self.max, other.max]),
         }
     }
+    /// Get the corners of the Bounding Box
+    pub fn get_corners(&self) -> [na::Point3<S>; 8] {
+        [
+            na::Point3::<S>::new(self.min.x, self.min.y, self.min.z),
+            na::Point3::<S>::new(self.min.x, self.min.y, self.max.z),
+            na::Point3::<S>::new(self.min.x, self.max.y, self.min.z),
+            na::Point3::<S>::new(self.min.x, self.max.y, self.max.z),
+            na::Point3::<S>::new(self.max.x, self.min.y, self.min.z),
+            na::Point3::<S>::new(self.max.x, self.min.y, self.max.z),
+            na::Point3::<S>::new(self.max.x, self.max.y, self.min.z),
+            na::Point3::<S>::new(self.max.x, self.max.y, self.max.z),
+        ]
+    }
     /// Transform a Bounding Box - resulting in a enclosing axis aligned Bounding Box.
     pub fn transform(&self, mat: &na::Matrix4<S>) -> BoundingBox<S> {
         let a = &self.min;
@@ -283,6 +296,21 @@ mod test {
             assert_relative_eq!(bbox.min, na::Point3::new(0., -2., 0.));
             assert_relative_eq!(bbox.max, na::Point3::new(1., 1., 2.));
         }
+    }
+
+    #[test]
+    fn get_corners() {
+        let bbox =
+            BoundingBox::<f64>::new(&na::Point3::new(1., 2., 3.), &na::Point3::new(4., 5., 6.));
+        let corners = bbox.get_corners();
+        assert!(corners.contains(&na::Point3::new(1., 2., 3.)));
+        assert!(corners.contains(&na::Point3::new(1., 2., 6.)));
+        assert!(corners.contains(&na::Point3::new(1., 5., 3.)));
+        assert!(corners.contains(&na::Point3::new(1., 5., 6.)));
+        assert!(corners.contains(&na::Point3::new(4., 2., 3.)));
+        assert!(corners.contains(&na::Point3::new(4., 2., 6.)));
+        assert!(corners.contains(&na::Point3::new(4., 5., 3.)));
+        assert!(corners.contains(&na::Point3::new(4., 5., 6.)));
     }
 
     #[test]
