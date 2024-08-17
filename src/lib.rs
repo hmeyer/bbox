@@ -165,22 +165,12 @@ impl<S: Float + Debug + na::RealField + simba::scalar::RealField> BoundingBox<S>
     }
     /// Transform a Bounding Box - resulting in a enclosing axis aligned Bounding Box.
     pub fn transform(&self, mat: &na::Matrix4<S>) -> BoundingBox<S> {
-        let a = &self.min;
-        let b = &self.max;
-        let corners = [
-            mat.transform_point(&na::Point3::<S>::new(a.x, a.y, a.z)),
-            mat.transform_point(&na::Point3::<S>::new(a.x, a.y, b.z)),
-            mat.transform_point(&na::Point3::<S>::new(a.x, b.y, a.z)),
-            mat.transform_point(&na::Point3::<S>::new(a.x, b.y, b.z)),
-            mat.transform_point(&na::Point3::<S>::new(b.x, a.y, a.z)),
-            mat.transform_point(&na::Point3::<S>::new(b.x, a.y, b.z)),
-            mat.transform_point(&na::Point3::<S>::new(b.x, b.y, a.z)),
-            mat.transform_point(&na::Point3::<S>::new(b.x, b.y, b.z)),
-        ];
-        BoundingBox {
-            min: point_min(&corners),
-            max: point_max(&corners),
-        }
+        let corners = self.get_corners();
+        let transformed: Vec<_> = corners
+            .into_iter()
+            .map(|c| mat.transform_point(&c))
+            .collect();
+        BoundingBox::from(&transformed)
     }
     /// Dilate a Bounding Box by some amount in all directions.
     pub fn dilate(&mut self, d: S) -> &mut Self {
