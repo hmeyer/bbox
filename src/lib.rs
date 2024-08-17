@@ -149,6 +149,14 @@ impl<S: Float + Debug + na::RealField + simba::scalar::RealField> BoundingBox<S>
             && self.max.y.is_finite()
             && self.max.z.is_finite()
     }
+    /// Returns the center point of the Bounding Box.
+    pub fn center(&self) -> na::Point3<S> {
+        na::Point3::<S>::new(
+            (self.min.x + self.max.x) / S::from(2.0).unwrap(),
+            (self.min.y + self.max.y) / S::from(2.0).unwrap(),
+            (self.min.z + self.max.z) / S::from(2.0).unwrap(),
+        )
+    }
     /// Create a CSG Union of two Bounding Boxes.
     pub fn union(&self, other: &BoundingBox<S>) -> BoundingBox<S> {
         BoundingBox {
@@ -335,6 +343,13 @@ mod test {
             &na::Point3::new(f64::INFINITY, 1., 1.),
         );
         assert!(!bbox.is_finite());
+    }
+
+    #[test]
+    fn center() {
+        let bbox =
+            BoundingBox::<f64>::new(&na::Point3::new(0., 0., 0.), &na::Point3::new(1., 1., 1.));
+        assert_relative_eq!(bbox.center(), na::Point3::new(0.5, 0.5, 0.5));
     }
 
     #[test]
