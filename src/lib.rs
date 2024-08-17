@@ -136,6 +136,10 @@ impl<S: Float + Debug + na::RealField + simba::scalar::RealField> BoundingBox<S>
             ),
         }
     }
+    /// Returns true if the Bounding Box is empty.
+    pub fn is_empty(&self) -> bool {
+        self.min > self.max
+    }
     /// Create a CSG Union of two Bounding Boxes.
     pub fn union(&self, other: &BoundingBox<S>) -> BoundingBox<S> {
         BoundingBox {
@@ -301,6 +305,14 @@ mod test {
         assert!(corners.contains(&na::Point3::new(4., 2., 6.)));
         assert!(corners.contains(&na::Point3::new(4., 5., 3.)));
         assert!(corners.contains(&na::Point3::new(4., 5., 6.)));
+    }
+
+    #[test]
+    fn is_empty() {
+        let bbox = BoundingBox::<f64>::neg_infinity();
+        assert!(bbox.is_empty());
+        let bbox = BoundingBox::<f64>::from([na::Point3::new(0., 0., 0.)]);
+        assert!(!bbox.is_empty());
     }
 
     #[test]
