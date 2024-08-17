@@ -5,9 +5,22 @@
 //! distance a Point has to the Box.
 //! # Examples
 //!
+//! Insert points into a Bounding Box:
+//!
+//! ```rust
+//! use nalgebra as na;
+//! let mut bbox = bbox::BoundingBox::<f64>::neg_infinity();
+//! bbox.insert(&na::Point3::new(0., 0., 0.));
+//! bbox.insert(&na::Point3::new(1., 2., 3.));
+//!
+//! // or insert multiple points at once
+//!
+//! let bbox = bbox::BoundingBox::<f64>::from([na::Point3::new(0., 0., 0.),
+//!                                            na::Point3::new(1., 2., 3.)]);
+//! ```
 //! Intersect two Bounding Boxes:
 //!
-//! ```rust,no_run
+//! ```rust
 //! use nalgebra as na;
 //! let bbox1 = bbox::BoundingBox::<f64>::new(&na::Point3::new(0., 0., 0.),
 //!                                           &na::Point3::new(1., 2., 3.));
