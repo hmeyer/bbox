@@ -5,9 +5,22 @@
 //! distance a Point has to the Box.
 //! # Examples
 //!
+//! Insert points into a Bounding Box:
+//!
+//! ```rust
+//! use nalgebra as na;
+//! let mut bbox = bbox::BoundingBox::<f64>::neg_infinity();
+//! bbox.insert(&na::Point3::new(0., 0., 0.));
+//! bbox.insert(&na::Point3::new(1., 2., 3.));
+//!
+//! // or insert multiple points at once
+//!
+//! let bbox = bbox::BoundingBox::<f64>::from([na::Point3::new(0., 0., 0.),
+//!                                            na::Point3::new(1., 2., 3.)]);
+//! ```
 //! Intersect two Bounding Boxes:
 //!
-//! ```rust,no_run
+//! ```rust
 //! use nalgebra as na;
 //! let bbox1 = bbox::BoundingBox::<f64>::new(&na::Point3::new(0., 0., 0.),
 //!                                           &na::Point3::new(1., 2., 3.));
@@ -84,6 +97,15 @@ fn point_max<S: 'static + Float + Debug>(p: &[na::Point3<S>]) -> na::Point3<S> {
     )
 }
 
+impl<S: Float + na::RealField, T: AsRef<[na::Point3<S>]>> From<T> for BoundingBox<S> {
+    fn from(points: T) -> BoundingBox<S> {
+        BoundingBox {
+            min: point_min(points.as_ref()),
+            max: point_max(points.as_ref()),
+        }
+    }
+}
+
 impl<S: Float + Debug + na::RealField + simba::scalar::RealField> BoundingBox<S> {
     /// Returns an infinte sized box.
     pub fn infinity() -> BoundingBox<S> {
@@ -114,6 +136,27 @@ impl<S: Float + Debug + na::RealField + simba::scalar::RealField> BoundingBox<S>
             ),
         }
     }
+    /// Returns true if the Bounding Box is empty.
+    pub fn is_empty(&self) -> bool {
+        self.min > self.max
+    }
+    /// Returns true if the Bounding Box has finite size.
+    pub fn is_finite(&self) -> bool {
+        self.min.x.is_finite()
+            && self.min.y.is_finite()
+            && self.min.z.is_finite()
+            && self.max.x.is_finite()
+            && self.max.y.is_finite()
+            && self.max.z.is_finite()
+    }
+    /// Returns the center point of the Bounding Box.
+    pub fn center(&self) -> na::Point3<S> {
+        na::Point3::<S>::new(
+            (self.min.x + self.max.x) / S::from(2.0).unwrap(),
+            (self.min.y + self.max.y) / S::from(2.0).unwrap(),
+            (self.min.z + self.max.z) / S::from(2.0).unwrap(),
+        )
+    }
     /// Create a CSG Union of two Bounding Boxes.
     pub fn union(&self, other: &BoundingBox<S>) -> BoundingBox<S> {
         BoundingBox {
@@ -128,24 +171,27 @@ impl<S: Float + Debug + na::RealField + simba::scalar::RealField> BoundingBox<S>
             max: point_min(&[self.max, other.max]),
         }
     }
+    /// Get the corners of the Bounding Box
+    pub fn get_corners(&self) -> [na::Point3<S>; 8] {
+        [
+            na::Point3::<S>::new(self.min.x, self.min.y, self.min.z),
+            na::Point3::<S>::new(self.min.x, self.min.y, self.max.z),
+            na::Point3::<S>::new(self.min.x, self.max.y, self.min.z),
+            na::Point3::<S>::new(self.min.x, self.max.y, self.max.z),
+            na::Point3::<S>::new(self.max.x, self.min.y, self.min.z),
+            na::Point3::<S>::new(self.max.x, self.min.y, self.max.z),
+            na::Point3::<S>::new(self.max.x, self.max.y, self.min.z),
+            na::Point3::<S>::new(self.max.x, self.max.y, self.max.z),
+        ]
+    }
     /// Transform a Bounding Box - resulting in a enclosing axis aligned Bounding Box.
     pub fn transform(&self, mat: &na::Matrix4<S>) -> BoundingBox<S> {
-        let a = &self.min;
-        let b = &self.max;
-        let corners = [
-            mat.transform_point(&na::Point3::<S>::new(a.x, a.y, a.z)),
-            mat.transform_point(&na::Point3::<S>::new(a.x, a.y, b.z)),
-            mat.transform_point(&na::Point3::<S>::new(a.x, b.y, a.z)),
-            mat.transform_point(&na::Point3::<S>::new(a.x, b.y, b.z)),
-            mat.transform_point(&na::Point3::<S>::new(b.x, a.y, a.z)),
-            mat.transform_point(&na::Point3::<S>::new(b.x, a.y, b.z)),
-            mat.transform_point(&na::Point3::<S>::new(b.x, b.y, a.z)),
-            mat.transform_point(&na::Point3::<S>::new(b.x, b.y, b.z)),
-        ];
-        BoundingBox {
-            min: point_min(&corners),
-            max: point_max(&corners),
-        }
+        let corners = self.get_corners();
+        let transformed: Vec<_> = corners
+            .into_iter()
+            .map(|c| mat.transform_point(&c))
+            .collect();
+        BoundingBox::from(&transformed)
     }
     /// Dilate a Bounding Box by some amount in all directions.
     pub fn dilate(&mut self, d: S) -> &mut Self {
@@ -245,6 +291,66 @@ mod test {
         assert!(bbox.contains(&na::Point3::new(1., 1., 1.)));
         assert!(!bbox.contains(&na::Point3::new(2., 2., 2.)));
         assert!(!bbox.contains(&na::Point3::new(-1., -1., -1.)));
+    }
+
+    #[test]
+    fn box_from_points() {
+        let points = [
+            na::Point3::new(0., 0., 0.),
+            na::Point3::new(1., 1., 0.),
+            na::Point3::new(0., -2., 2.),
+        ];
+        for bbox in [
+            BoundingBox::from(points),            // from array
+            BoundingBox::from(&points[..]),       // from slice
+            BoundingBox::from(Vec::from(points)), // from vector
+        ] {
+            assert_relative_eq!(bbox.min, na::Point3::new(0., -2., 0.));
+            assert_relative_eq!(bbox.max, na::Point3::new(1., 1., 2.));
+        }
+    }
+
+    #[test]
+    fn get_corners() {
+        let bbox =
+            BoundingBox::<f64>::new(&na::Point3::new(1., 2., 3.), &na::Point3::new(4., 5., 6.));
+        let corners = bbox.get_corners();
+        assert!(corners.contains(&na::Point3::new(1., 2., 3.)));
+        assert!(corners.contains(&na::Point3::new(1., 2., 6.)));
+        assert!(corners.contains(&na::Point3::new(1., 5., 3.)));
+        assert!(corners.contains(&na::Point3::new(1., 5., 6.)));
+        assert!(corners.contains(&na::Point3::new(4., 2., 3.)));
+        assert!(corners.contains(&na::Point3::new(4., 2., 6.)));
+        assert!(corners.contains(&na::Point3::new(4., 5., 3.)));
+        assert!(corners.contains(&na::Point3::new(4., 5., 6.)));
+    }
+
+    #[test]
+    fn is_empty() {
+        let bbox = BoundingBox::<f64>::neg_infinity();
+        assert!(bbox.is_empty());
+        let bbox = BoundingBox::<f64>::from([na::Point3::new(0., 0., 0.)]);
+        assert!(!bbox.is_empty());
+    }
+
+    #[test]
+    fn is_finite() {
+        let bbox = BoundingBox::<f64>::neg_infinity();
+        assert!(!bbox.is_finite());
+        let bbox = BoundingBox::<f64>::from([na::Point3::new(0., 0., 0.)]);
+        assert!(bbox.is_finite());
+        let bbox = BoundingBox::<f64>::new(
+            &na::Point3::new(0., 0., 0.),
+            &na::Point3::new(f64::INFINITY, 1., 1.),
+        );
+        assert!(!bbox.is_finite());
+    }
+
+    #[test]
+    fn center() {
+        let bbox =
+            BoundingBox::<f64>::new(&na::Point3::new(0., 0., 0.), &na::Point3::new(1., 1., 1.));
+        assert_relative_eq!(bbox.center(), na::Point3::new(0.5, 0.5, 0.5));
     }
 
     #[test]
