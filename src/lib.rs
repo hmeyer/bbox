@@ -10,22 +10,22 @@
 //! ```rust
 //! use nalgebra as na;
 //! let mut bbox = bbox::BoundingBox::<f64>::neg_infinity();
-//! bbox.insert(&na::Point3::new(0., 0., 0.));
-//! bbox.insert(&na::Point3::new(1., 2., 3.));
+//! bbox.insert(&na::Point::from([0., 0., 0.]));
+//! bbox.insert(&na::Point::from([1., 2., 3.]));
 //!
 //! // or insert multiple points at once
 //!
-//! let bbox = bbox::BoundingBox::<f64>::from([na::Point3::new(0., 0., 0.),
-//!                                            na::Point3::new(1., 2., 3.)]);
+//! let bbox = bbox::BoundingBox::<f64>::from([na::Point::from([0., 0., 0.]),
+//!                                            na::Point::from([1., 2., 3.])]);
 //! ```
 //! Intersect two Bounding Boxes:
 //!
 //! ```rust
 //! use nalgebra as na;
-//! let bbox1 = bbox::BoundingBox::<f64>::new(&na::Point3::new(0., 0., 0.),
-//!                                           &na::Point3::new(1., 2., 3.));
-//! let bbox2 = bbox::BoundingBox::<f64>::new(&na::Point3::new(-1., -2., -3.),
-//!                                           &na::Point3::new(3., 2., 1.));
+//! let bbox1 = bbox::BoundingBox::<f64>::new(&na::Point::from([0., 0., 0.]),
+//!                                           &na::Point::from([1., 2., 3.]));
+//! let bbox2 = bbox::BoundingBox::<f64>::new(&na::Point::from([-1., -2., -3.]),
+//!                                           &na::Point::from([3., 2., 1.]));
 //! let intersection = bbox1.intersection(&bbox2);
 //! ```
 //! Rotate a Bounding Box:
@@ -33,25 +33,25 @@
 //! ```rust
 //! use nalgebra as na;
 //! let rotation = na::Rotation::from_euler_angles(10., 11., 12.);
-//! let bbox = bbox::BoundingBox::<f64>::new(&na::Point3::new(0., 0., 0.),
-//!                                          &na::Point3::new(1., 2., 3.));
+//! let bbox = bbox::BoundingBox::<f64>::new(&na::Point::from([0., 0., 0.]),
+//!                                          &na::Point::from([1., 2., 3.]));
 //! let rotated_box = bbox.transform(&rotation.to_homogeneous());
 //! ```
 //! Is a point contained in the Box?
 //!
 //! ```rust
 //! use nalgebra as na;
-//! let bbox = bbox::BoundingBox::<f64>::new(&na::Point3::new(0., 0., 0.),
-//!                                          &na::Point3::new(1., 2., 3.));
-//! let result = bbox.contains(&na::Point3::new(1., 1., 1.));
+//! let bbox = bbox::BoundingBox::<f64>::new(&na::Point::from([0., 0., 0.]),
+//!                                          &na::Point::from([1., 2., 3.]));
+//! let result = bbox.contains(&na::Point::from([1., 1., 1.]));
 //! ```
 //! Calculate approximate distance of a point to the Box:
 //!
 //! ```rust
 //! use nalgebra as na;
-//! let bbox = bbox::BoundingBox::<f64>::new(&na::Point3::new(0., 0., 0.),
-//!                                          &na::Point3::new(1., 2., 3.));
-//! let distance = bbox.distance(&na::Point3::new(1., 1., 1.));
+//! let bbox = bbox::BoundingBox::<f64>::new(&na::Point::from([0., 0., 0.]),
+//!                                          &na::Point::from([1., 2., 3.]));
+//! let distance = bbox.distance(&na::Point::from([1., 1., 1.]));
 //! ```
 //! ## Cargo Features
 //!
@@ -283,53 +283,57 @@ mod test {
 
     #[test]
     fn box_contains_points_inside() {
-        let bbox =
-            BoundingBox::<f64>::new(&na::Point3::new(0., 0., 0.), &na::Point3::new(1., 2., 3.));
-        assert!(bbox.contains(&na::Point3::new(0., 0., 0.)));
-        assert!(bbox.contains(&na::Point3::new(0., 1., 0.)));
-        assert!(bbox.contains(&na::Point3::new(1., 0., 1.)));
-        assert!(bbox.contains(&na::Point3::new(1., 1., 1.)));
-        assert!(!bbox.contains(&na::Point3::new(2., 2., 2.)));
-        assert!(!bbox.contains(&na::Point3::new(-1., -1., -1.)));
+        let bbox = BoundingBox::<f64>::new(
+            &na::Point::from([0., 0., 0.]),
+            &na::Point::from([1., 2., 3.]),
+        );
+        assert!(bbox.contains(&na::Point::from([0., 0., 0.])));
+        assert!(bbox.contains(&na::Point::from([0., 1., 0.])));
+        assert!(bbox.contains(&na::Point::from([1., 0., 1.])));
+        assert!(bbox.contains(&na::Point::from([1., 1., 1.])));
+        assert!(!bbox.contains(&na::Point::from([2., 2., 2.])));
+        assert!(!bbox.contains(&na::Point::from([-1., -1., -1.])));
     }
 
     #[test]
     fn box_from_points() {
         let points = [
-            na::Point3::new(0., 0., 0.),
-            na::Point3::new(1., 1., 0.),
-            na::Point3::new(0., -2., 2.),
+            na::Point::from([0., 0., 0.]),
+            na::Point::from([1., 1., 0.]),
+            na::Point::from([0., -2., 2.]),
         ];
         for bbox in [
             BoundingBox::from(points),            // from array
             BoundingBox::from(&points[..]),       // from slice
             BoundingBox::from(Vec::from(points)), // from vector
         ] {
-            assert_relative_eq!(bbox.min, na::Point3::new(0., -2., 0.));
-            assert_relative_eq!(bbox.max, na::Point3::new(1., 1., 2.));
+            assert_relative_eq!(bbox.min, na::Point::from([0., -2., 0.]));
+            assert_relative_eq!(bbox.max, na::Point::from([1., 1., 2.]));
         }
     }
 
     #[test]
     fn get_corners() {
-        let bbox =
-            BoundingBox::<f64>::new(&na::Point3::new(1., 2., 3.), &na::Point3::new(4., 5., 6.));
+        let bbox = BoundingBox::<f64>::new(
+            &na::Point::from([1., 2., 3.]),
+            &na::Point::from([4., 5., 6.]),
+        );
         let corners = bbox.get_corners();
-        assert!(corners.contains(&na::Point3::new(1., 2., 3.)));
-        assert!(corners.contains(&na::Point3::new(1., 2., 6.)));
-        assert!(corners.contains(&na::Point3::new(1., 5., 3.)));
-        assert!(corners.contains(&na::Point3::new(1., 5., 6.)));
-        assert!(corners.contains(&na::Point3::new(4., 2., 3.)));
-        assert!(corners.contains(&na::Point3::new(4., 2., 6.)));
-        assert!(corners.contains(&na::Point3::new(4., 5., 3.)));
-        assert!(corners.contains(&na::Point3::new(4., 5., 6.)));
+        assert!(corners.contains(&na::Point::from([1., 2., 3.])));
+        assert!(corners.contains(&na::Point::from([1., 2., 6.])));
+        assert!(corners.contains(&na::Point::from([1., 5., 3.])));
+        assert!(corners.contains(&na::Point::from([1., 5., 6.])));
+        assert!(corners.contains(&na::Point::from([4., 2., 3.])));
+        assert!(corners.contains(&na::Point::from([4., 2., 6.])));
+        assert!(corners.contains(&na::Point::from([4., 5., 3.])));
+        assert!(corners.contains(&na::Point::from([4., 5., 6.])));
     }
 
     #[test]
     fn is_empty() {
         let bbox = BoundingBox::<f64>::neg_infinity();
         assert!(bbox.is_empty());
-        let bbox = BoundingBox::<f64>::from([na::Point3::new(0., 0., 0.)]);
+        let bbox = BoundingBox::<f64>::from([na::Point::from([0., 0., 0.])]);
         assert!(!bbox.is_empty());
     }
 
@@ -337,85 +341,113 @@ mod test {
     fn is_finite() {
         let bbox = BoundingBox::<f64>::neg_infinity();
         assert!(!bbox.is_finite());
-        let bbox = BoundingBox::<f64>::from([na::Point3::new(0., 0., 0.)]);
+        let bbox = BoundingBox::<f64>::from([na::Point::from([0., 0., 0.])]);
         assert!(bbox.is_finite());
         let bbox = BoundingBox::<f64>::new(
-            &na::Point3::new(0., 0., 0.),
-            &na::Point3::new(f64::INFINITY, 1., 1.),
+            &na::Point::from([0., 0., 0.]),
+            &na::Point::from([f64::INFINITY, 1., 1.]),
         );
         assert!(!bbox.is_finite());
     }
 
     #[test]
     fn center() {
-        let bbox =
-            BoundingBox::<f64>::new(&na::Point3::new(0., 0., 0.), &na::Point3::new(1., 1., 1.));
-        assert_relative_eq!(bbox.center(), na::Point3::new(0.5, 0.5, 0.5));
+        let bbox = BoundingBox::<f64>::new(
+            &na::Point::from([0., 0., 0.]),
+            &na::Point::from([1., 1., 1.]),
+        );
+        assert_relative_eq!(bbox.center(), na::Point::from([0.5, 0.5, 0.5]));
     }
 
     #[test]
     fn transform_with_translation() {
-        let bbox =
-            BoundingBox::<f64>::new(&na::Point3::new(0., 0., 0.), &na::Point3::new(1., 1., 1.));
+        let bbox = BoundingBox::<f64>::new(
+            &na::Point::from([0., 0., 0.]),
+            &na::Point::from([1., 1., 1.]),
+        );
         assert_relative_eq!(
             bbox.transform(&na::Translation3::new(1., 2., 3.).to_homogeneous()),
-            BoundingBox::<f64>::new(&na::Point3::new(1., 2., 3.), &na::Point3::new(2., 3., 4.),)
+            BoundingBox::<f64>::new(
+                &na::Point::from([1., 2., 3.]),
+                &na::Point::from([2., 3., 4.]),
+            )
         );
     }
 
     #[test]
     fn transform_with_rotation() {
-        let bbox =
-            BoundingBox::<f64>::new(&na::Point3::new(0., 0., 0.), &na::Point3::new(1., 1., 1.));
+        let bbox = BoundingBox::<f64>::new(
+            &na::Point::from([0., 0., 0.]),
+            &na::Point::from([1., 1., 1.]),
+        );
         assert_relative_eq!(
             bbox.transform(
                 &na::Rotation::from_euler_angles(::std::f64::consts::PI / 2., 0., 0.)
                     .to_homogeneous()
             ),
-            BoundingBox::<f64>::new(&na::Point3::new(0., -1., 0.), &na::Point3::new(1., 0., 1.),)
+            BoundingBox::<f64>::new(
+                &na::Point::from([0., -1., 0.]),
+                &na::Point::from([1., 0., 1.]),
+            )
         );
     }
 
     #[test]
     fn union_of_two_boxes() {
-        let bbox1 =
-            BoundingBox::<f64>::new(&na::Point3::new(0., 0., 0.), &na::Point3::new(4., 8., 16.));
-        let bbox2 =
-            BoundingBox::<f64>::new(&na::Point3::new(2., 2., 2.), &na::Point3::new(16., 4., 8.));
+        let bbox1 = BoundingBox::<f64>::new(
+            &na::Point::from([0., 0., 0.]),
+            &na::Point::from([4., 8., 16.]),
+        );
+        let bbox2 = BoundingBox::<f64>::new(
+            &na::Point::from([2., 2., 2.]),
+            &na::Point::from([16., 4., 8.]),
+        );
         assert_relative_eq!(
             bbox1.union(&bbox2),
-            BoundingBox::<f64>::new(&na::Point3::new(0., 0., 0.), &na::Point3::new(16., 8., 16.),)
+            BoundingBox::<f64>::new(
+                &na::Point::from([0., 0., 0.]),
+                &na::Point::from([16., 8., 16.]),
+            )
         );
     }
 
     #[test]
     fn intersection_of_two_boxes() {
-        let bbox1 =
-            BoundingBox::<f64>::new(&na::Point3::new(0., 0., 0.), &na::Point3::new(4., 8., 16.));
-        let bbox2 =
-            BoundingBox::<f64>::new(&na::Point3::new(2., 2., 2.), &na::Point3::new(16., 4., 8.));
+        let bbox1 = BoundingBox::<f64>::new(
+            &na::Point::from([0., 0., 0.]),
+            &na::Point::from([4., 8., 16.]),
+        );
+        let bbox2 = BoundingBox::<f64>::new(
+            &na::Point::from([2., 2., 2.]),
+            &na::Point::from([16., 4., 8.]),
+        );
         assert_relative_eq!(
             bbox1.intersection(&bbox2),
-            BoundingBox::<f64>::new(&na::Point3::new(2., 2., 2.), &na::Point3::new(4., 4., 8.),)
+            BoundingBox::<f64>::new(
+                &na::Point::from([2., 2., 2.]),
+                &na::Point::from([4., 4., 8.]),
+            )
         );
     }
 
     #[test]
     fn dilate() {
-        let mut bbox =
-            BoundingBox::<f64>::new(&na::Point3::new(0., 0., 0.), &na::Point3::new(1., 1., 1.));
+        let mut bbox = BoundingBox::<f64>::new(
+            &na::Point::from([0., 0., 0.]),
+            &na::Point::from([1., 1., 1.]),
+        );
         assert_relative_eq!(
             bbox.dilate(0.1),
             &mut BoundingBox::<f64>::new(
-                &na::Point3::new(-0.1, -0.1, -0.1),
-                &na::Point3::new(1.1, 1.1, 1.1),
+                &na::Point::from([-0.1, -0.1, -0.1]),
+                &na::Point::from([1.1, 1.1, 1.1]),
             )
         );
         assert_relative_eq!(
             bbox.dilate(-0.5),
             &mut BoundingBox::<f64>::new(
-                &na::Point3::new(0.4, 0.4, 0.4),
-                &na::Point3::new(0.6, 0.6, 0.6),
+                &na::Point::from([0.4, 0.4, 0.4]),
+                &na::Point::from([0.6, 0.6, 0.6]),
             )
         );
     }
@@ -423,8 +455,8 @@ mod test {
     #[test]
     fn box_contains_inserted_points() {
         let mut bbox = BoundingBox::neg_infinity();
-        let p1 = na::Point3::new(1., 0., 0.);
-        let p2 = na::Point3::new(0., 2., 3.);
+        let p1 = na::Point::from([1., 0., 0.]);
+        let p2 = na::Point::from([0., 2., 3.]);
         assert!(!bbox.contains(&p1));
         bbox.insert(&p1);
         assert!(bbox.contains(&p1));
