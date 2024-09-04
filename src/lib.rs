@@ -69,14 +69,14 @@ use std::fmt::Debug;
 #[derive(Clone, Debug, PartialEq)]
 pub struct BoundingBox<S: 'static + Debug + Copy + PartialEq> {
     /// X-Y-Z-Minimum corner of the box.
-    pub min: na::Point3<S>,
+    pub min: na::Point<S, 3>,
     /// X-Y-Z-Maximum corner of the box.
-    pub max: na::Point3<S>,
+    pub max: na::Point<S, 3>,
 }
 
-fn point_min<S: 'static + Float + Debug>(p: &[na::Point3<S>]) -> na::Point3<S> {
+fn point_min<S: 'static + Float + Debug>(p: &[na::Point<S, 3>]) -> na::Point<S, 3> {
     p.iter().fold(
-        na::Point3::<S>::new(S::infinity(), S::infinity(), S::infinity()),
+        na::Point::from([S::infinity(), S::infinity(), S::infinity()]),
         |mut min, current| {
             min.x = min.x.min(current.x);
             min.y = min.y.min(current.y);
@@ -85,9 +85,9 @@ fn point_min<S: 'static + Float + Debug>(p: &[na::Point3<S>]) -> na::Point3<S> {
         },
     )
 }
-fn point_max<S: 'static + Float + Debug>(p: &[na::Point3<S>]) -> na::Point3<S> {
+fn point_max<S: 'static + Float + Debug>(p: &[na::Point<S, 3>]) -> na::Point<S, 3> {
     p.iter().fold(
-        na::Point3::<S>::new(S::neg_infinity(), S::neg_infinity(), S::neg_infinity()),
+        na::Point::from([S::neg_infinity(), S::neg_infinity(), S::neg_infinity()]),
         |mut max, current| {
             max.x = max.x.max(current.x);
             max.y = max.y.max(current.y);
@@ -97,7 +97,7 @@ fn point_max<S: 'static + Float + Debug>(p: &[na::Point3<S>]) -> na::Point3<S> {
     )
 }
 
-impl<S: Float + na::RealField, T: AsRef<[na::Point3<S>]>> From<T> for BoundingBox<S> {
+impl<S: Float + na::RealField, T: AsRef<[na::Point<S, 3>]>> From<T> for BoundingBox<S> {
     fn from(points: T) -> BoundingBox<S> {
         BoundingBox {
             min: point_min(points.as_ref()),
@@ -110,30 +110,30 @@ impl<S: Float + Debug + na::RealField + simba::scalar::RealField> BoundingBox<S>
     /// Returns an infinte sized box.
     pub fn infinity() -> BoundingBox<S> {
         BoundingBox {
-            min: na::Point3::<S>::new(S::neg_infinity(), S::neg_infinity(), S::neg_infinity()),
-            max: na::Point3::<S>::new(S::infinity(), S::infinity(), S::infinity()),
+            min: na::Point::from([S::neg_infinity(), S::neg_infinity(), S::neg_infinity()]),
+            max: na::Point::from([S::infinity(), S::infinity(), S::infinity()]),
         }
     }
     /// Returns a negatively infinte sized box.
     pub fn neg_infinity() -> BoundingBox<S> {
         BoundingBox {
-            min: na::Point3::<S>::new(S::infinity(), S::infinity(), S::infinity()),
-            max: na::Point3::<S>::new(S::neg_infinity(), S::neg_infinity(), S::neg_infinity()),
+            min: na::Point::from([S::infinity(), S::infinity(), S::infinity()]),
+            max: na::Point::from([S::neg_infinity(), S::neg_infinity(), S::neg_infinity()]),
         }
     }
     /// Create a new Bounding Box by supplying two points.
-    pub fn new(a: &na::Point3<S>, b: &na::Point3<S>) -> BoundingBox<S> {
+    pub fn new(a: &na::Point<S, 3>, b: &na::Point<S, 3>) -> BoundingBox<S> {
         BoundingBox {
-            min: na::Point3::<S>::new(
+            min: na::Point::from([
                 Float::min(a.x, b.x),
                 Float::min(a.y, b.y),
                 Float::min(a.z, b.z),
-            ),
-            max: na::Point3::<S>::new(
+            ]),
+            max: na::Point::from([
                 Float::max(a.x, b.x),
                 Float::max(a.y, b.y),
                 Float::max(a.z, b.z),
-            ),
+            ]),
         }
     }
     /// Returns true if the Bounding Box is empty.
@@ -150,12 +150,12 @@ impl<S: Float + Debug + na::RealField + simba::scalar::RealField> BoundingBox<S>
             && self.max.z.is_finite()
     }
     /// Returns the center point of the Bounding Box.
-    pub fn center(&self) -> na::Point3<S> {
-        na::Point3::<S>::new(
+    pub fn center(&self) -> na::Point<S, 3> {
+        na::Point::from([
             (self.min.x + self.max.x) / S::from(2.0).unwrap(),
             (self.min.y + self.max.y) / S::from(2.0).unwrap(),
             (self.min.z + self.max.z) / S::from(2.0).unwrap(),
-        )
+        ])
     }
     /// Create a CSG Union of two Bounding Boxes.
     pub fn union(&self, other: &BoundingBox<S>) -> BoundingBox<S> {
@@ -172,16 +172,16 @@ impl<S: Float + Debug + na::RealField + simba::scalar::RealField> BoundingBox<S>
         }
     }
     /// Get the corners of the Bounding Box
-    pub fn get_corners(&self) -> [na::Point3<S>; 8] {
+    pub fn get_corners(&self) -> [na::Point<S, 3>; 8] {
         [
-            na::Point3::<S>::new(self.min.x, self.min.y, self.min.z),
-            na::Point3::<S>::new(self.min.x, self.min.y, self.max.z),
-            na::Point3::<S>::new(self.min.x, self.max.y, self.min.z),
-            na::Point3::<S>::new(self.min.x, self.max.y, self.max.z),
-            na::Point3::<S>::new(self.max.x, self.min.y, self.min.z),
-            na::Point3::<S>::new(self.max.x, self.min.y, self.max.z),
-            na::Point3::<S>::new(self.max.x, self.max.y, self.min.z),
-            na::Point3::<S>::new(self.max.x, self.max.y, self.max.z),
+            na::Point::from([self.min.x, self.min.y, self.min.z]),
+            na::Point::from([self.min.x, self.min.y, self.max.z]),
+            na::Point::from([self.min.x, self.max.y, self.min.z]),
+            na::Point::from([self.min.x, self.max.y, self.max.z]),
+            na::Point::from([self.max.x, self.min.y, self.min.z]),
+            na::Point::from([self.max.x, self.min.y, self.max.z]),
+            na::Point::from([self.max.x, self.max.y, self.min.z]),
+            na::Point::from([self.max.x, self.max.y, self.max.z]),
         ]
     }
     /// Transform a Bounding Box - resulting in a enclosing axis aligned Bounding Box.
@@ -204,7 +204,7 @@ impl<S: Float + Debug + na::RealField + simba::scalar::RealField> BoundingBox<S>
         self
     }
     /// Add a Point to a Bounding Box, e.g. expand the Bounding Box to contain that point.
-    pub fn insert(&mut self, o: &na::Point3<S>) -> &mut Self {
+    pub fn insert(&mut self, o: &na::Point<S, 3>) -> &mut Self {
         self.min.x = Float::min(self.min.x, o.x);
         self.min.y = Float::min(self.min.y, o.y);
         self.min.z = Float::min(self.min.z, o.z);
@@ -219,7 +219,7 @@ impl<S: Float + Debug + na::RealField + simba::scalar::RealField> BoundingBox<S>
     }
     /// Returns the approximate distance of p to the box. The result is guarateed to be not less
     /// than the euclidean distance of p to the box.
-    pub fn distance(&self, p: &na::Point3<S>) -> S {
+    pub fn distance(&self, p: &na::Point<S, 3>) -> S {
         // If p is not inside (neg), then it is outside (pos) on only one side.
         // So so calculating the max of the diffs on both sides should result in the true value,
         // if positive.
@@ -229,7 +229,7 @@ impl<S: Float + Debug + na::RealField + simba::scalar::RealField> BoundingBox<S>
         Float::max(xval, Float::max(yval, zval))
     }
     /// Return true if the Bounding Box contains p.
-    pub fn contains(&self, p: &na::Point3<S>) -> bool {
+    pub fn contains(&self, p: &na::Point<S, 3>) -> bool {
         p.x >= self.min.x
             && p.x <= self.max.x
             && p.y >= self.min.y
@@ -251,8 +251,8 @@ where
     }
 
     fn abs_diff_eq(&self, other: &Self, epsilon: Self::Epsilon) -> bool {
-        na::Point3::abs_diff_eq(&self.min, &other.min, epsilon)
-            && na::Point3::abs_diff_eq(&self.max, &other.max, epsilon)
+        na::Point::abs_diff_eq(&self.min, &other.min, epsilon)
+            && na::Point::abs_diff_eq(&self.max, &other.max, epsilon)
     }
 }
 
@@ -271,8 +271,8 @@ where
         epsilon: <T as AbsDiffEq>::Epsilon,
         max_relative: <T as AbsDiffEq>::Epsilon,
     ) -> bool {
-        na::Point3::relative_eq(&self.min, &other.min, epsilon, max_relative)
-            && na::Point3::relative_eq(&self.max, &other.max, epsilon, max_relative)
+        na::Point::relative_eq(&self.min, &other.min, epsilon, max_relative)
+            && na::Point::relative_eq(&self.max, &other.max, epsilon, max_relative)
     }
 }
 
