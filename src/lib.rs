@@ -97,8 +97,8 @@ fn point_max<S: 'static + Float + Debug, const D: usize>(p: &[na::Point<S, D>]) 
 }
 
 impl<S: Float + na::RealField, T: AsRef<[na::Point<S, 3>]>> From<T> for BoundingBox<S> {
-    fn from(points: T) -> BoundingBox<S> {
-        BoundingBox {
+    fn from(points: T) -> Self {
+        Self {
             min: point_min(points.as_ref()),
             max: point_max(points.as_ref()),
         }
@@ -107,22 +107,22 @@ impl<S: Float + na::RealField, T: AsRef<[na::Point<S, 3>]>> From<T> for Bounding
 
 impl<S: Float + Debug + na::RealField + simba::scalar::RealField> BoundingBox<S> {
     /// Returns an infinte sized box.
-    pub fn infinity() -> BoundingBox<S> {
-        BoundingBox {
+    pub fn infinity() -> Self {
+        Self {
             min: na::Point::from([S::neg_infinity(), S::neg_infinity(), S::neg_infinity()]),
             max: na::Point::from([S::infinity(), S::infinity(), S::infinity()]),
         }
     }
     /// Returns a negatively infinte sized box.
-    pub fn neg_infinity() -> BoundingBox<S> {
-        BoundingBox {
+    pub fn neg_infinity() -> Self {
+        Self {
             min: na::Point::from([S::infinity(), S::infinity(), S::infinity()]),
             max: na::Point::from([S::neg_infinity(), S::neg_infinity(), S::neg_infinity()]),
         }
     }
     /// Create a new Bounding Box by supplying two points.
-    pub fn new(a: &na::Point<S, 3>, b: &na::Point<S, 3>) -> BoundingBox<S> {
-        BoundingBox {
+    pub fn new(a: &na::Point<S, 3>, b: &na::Point<S, 3>) -> Self {
+        Self {
             min: na::Point::from([
                 Float::min(a.x, b.x),
                 Float::min(a.y, b.y),
@@ -157,15 +157,15 @@ impl<S: Float + Debug + na::RealField + simba::scalar::RealField> BoundingBox<S>
         ])
     }
     /// Create a CSG Union of two Bounding Boxes.
-    pub fn union(&self, other: &BoundingBox<S>) -> BoundingBox<S> {
-        BoundingBox {
+    pub fn union(&self, other: &Self) -> Self {
+        Self {
             min: point_min(&[self.min, other.min]),
             max: point_max(&[self.max, other.max]),
         }
     }
     /// Create a CSG Intersection of two Bounding Boxes.
-    pub fn intersection(&self, other: &BoundingBox<S>) -> BoundingBox<S> {
-        BoundingBox {
+    pub fn intersection(&self, other: &Self) -> Self {
+        Self {
             min: point_max(&[self.min, other.min]),
             max: point_min(&[self.max, other.max]),
         }
@@ -184,13 +184,13 @@ impl<S: Float + Debug + na::RealField + simba::scalar::RealField> BoundingBox<S>
         ]
     }
     /// Transform a Bounding Box - resulting in a enclosing axis aligned Bounding Box.
-    pub fn transform(&self, mat: &na::Matrix4<S>) -> BoundingBox<S> {
+    pub fn transform(&self, mat: &na::Matrix4<S>) -> Self {
         let corners = self.get_corners();
         let transformed: Vec<_> = corners
             .into_iter()
             .map(|c| mat.transform_point(&c))
             .collect();
-        BoundingBox::from(&transformed)
+        Self::from(&transformed)
     }
     /// Dilate a Bounding Box by some amount in all directions.
     pub fn dilate(&mut self, d: S) -> &mut Self {
