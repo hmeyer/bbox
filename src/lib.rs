@@ -74,25 +74,26 @@ pub struct BoundingBox<S: 'static + Debug + Copy + PartialEq> {
     pub max: na::Point<S, 3>,
 }
 
-fn point_min<S: 'static + Float + Debug, const D: usize>(p: &[na::Point<S, D>]) -> na::Point<S, D> {
-    p.iter()
-        .fold(na::Point::from([S::infinity(); D]), |mut min, current| {
-            for (min_i, current_i) in min.iter_mut().zip(current.iter()) {
-                *min_i = min_i.min(*current_i);
-            }
-            min
-        })
-}
-fn point_max<S: 'static + Float + Debug, const D: usize>(p: &[na::Point<S, D>]) -> na::Point<S, D> {
+fn point_best<S: 'static + Float + Debug, const D: usize>(
+    p: &[na::Point<S, D>],
+    op: fn(S, S) -> S,
+) -> na::Point<S, D> {
     p.iter().fold(
-        na::Point::from([S::neg_infinity(); D]),
-        |mut max, current| {
-            for (max_i, current_i) in max.iter_mut().zip(current.iter()) {
-                *max_i = max_i.max(*current_i);
+        na::Point::from([-op(S::infinity(), S::neg_infinity()); D]),
+        |mut best, current| {
+            for (best_i, current_i) in best.iter_mut().zip(current.iter()) {
+                *best_i = op(*best_i, *current_i);
             }
-            max
+            best
         },
     )
+}
+
+fn point_min<S: 'static + Float + Debug, const D: usize>(p: &[na::Point<S, D>]) -> na::Point<S, D> {
+    point_best(p, S::min)
+}
+fn point_max<S: 'static + Float + Debug, const D: usize>(p: &[na::Point<S, D>]) -> na::Point<S, D> {
+    point_best(p, S::max)
 }
 
 impl<S: Float + na::RealField, T: AsRef<[na::Point<S, 3>]>> From<T> for BoundingBox<S> {
