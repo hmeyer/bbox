@@ -74,24 +74,22 @@ pub struct BoundingBox<S: 'static + Debug + Copy + PartialEq> {
     pub max: na::Point<S, 3>,
 }
 
-fn point_min<S: 'static + Float + Debug>(p: &[na::Point<S, 3>]) -> na::Point<S, 3> {
-    p.iter().fold(
-        na::Point::from([S::infinity(), S::infinity(), S::infinity()]),
-        |mut min, current| {
-            min.x = min.x.min(current.x);
-            min.y = min.y.min(current.y);
-            min.z = min.z.min(current.z);
+fn point_min<S: 'static + Float + Debug, const D: usize>(p: &[na::Point<S, D>]) -> na::Point<S, D> {
+    p.iter()
+        .fold(na::Point::from([S::infinity(); D]), |mut min, current| {
+            for (min_i, current_i) in min.iter_mut().zip(current.iter()) {
+                *min_i = min_i.min(*current_i);
+            }
             min
-        },
-    )
+        })
 }
-fn point_max<S: 'static + Float + Debug>(p: &[na::Point<S, 3>]) -> na::Point<S, 3> {
+fn point_max<S: 'static + Float + Debug, const D: usize>(p: &[na::Point<S, D>]) -> na::Point<S, D> {
     p.iter().fold(
-        na::Point::from([S::neg_infinity(), S::neg_infinity(), S::neg_infinity()]),
+        na::Point::from([S::neg_infinity(); D]),
         |mut max, current| {
-            max.x = max.x.max(current.x);
-            max.y = max.y.max(current.y);
-            max.z = max.z.max(current.z);
+            for (max_i, current_i) in max.iter_mut().zip(current.iter()) {
+                *max_i = max_i.max(*current_i);
+            }
             max
         },
     )
