@@ -135,15 +135,15 @@ impl<S: Float + Debug + na::RealField + simba::scalar::RealField> BoundingBox<S>
     /// Returns an infinte sized box.
     pub fn infinity() -> Self {
         Self {
-            min: na::Point::from([S::neg_infinity(), S::neg_infinity(), S::neg_infinity()]),
-            max: na::Point::from([S::infinity(), S::infinity(), S::infinity()]),
+            min: na::Point::from([S::neg_infinity(); 3]),
+            max: na::Point::from([S::infinity(); 3]),
         }
     }
     /// Returns a negatively infinte sized box.
     pub fn neg_infinity() -> Self {
         Self {
-            min: na::Point::from([S::infinity(), S::infinity(), S::infinity()]),
-            max: na::Point::from([S::neg_infinity(), S::neg_infinity(), S::neg_infinity()]),
+            min: na::Point::from([S::infinity(); 3]),
+            max: na::Point::from([S::neg_infinity(); 3]),
         }
     }
     /// Create a new Bounding Box by supplying two points.
@@ -159,20 +159,14 @@ impl<S: Float + Debug + na::RealField + simba::scalar::RealField> BoundingBox<S>
     }
     /// Returns true if the Bounding Box has finite size.
     pub fn is_finite(&self) -> bool {
-        self.min.x.is_finite()
-            && self.min.y.is_finite()
-            && self.min.z.is_finite()
-            && self.max.x.is_finite()
-            && self.max.y.is_finite()
-            && self.max.z.is_finite()
+        self.min
+            .iter()
+            .chain(self.max.iter())
+            .all(|x| x.is_finite())
     }
     /// Returns the center point of the Bounding Box.
     pub fn center(&self) -> na::Point<S, 3> {
-        na::Point::from([
-            (self.min.x + self.max.x) / S::from(2.0).unwrap(),
-            (self.min.y + self.max.y) / S::from(2.0).unwrap(),
-            (self.min.z + self.max.z) / S::from(2.0).unwrap(),
-        ])
+        self.min + (self.max - self.min) / S::from(2.0).unwrap()
     }
     /// Create a CSG Union of two Bounding Boxes.
     pub fn union(&self, other: &Self) -> Self {
@@ -189,17 +183,19 @@ impl<S: Float + Debug + na::RealField + simba::scalar::RealField> BoundingBox<S>
         }
     }
     /// Get the corners of the Bounding Box
-    pub fn get_corners(&self) -> [na::Point<S, 3>; 8] {
-        [
-            na::Point::from([self.min.x, self.min.y, self.min.z]),
-            na::Point::from([self.min.x, self.min.y, self.max.z]),
-            na::Point::from([self.min.x, self.max.y, self.min.z]),
-            na::Point::from([self.min.x, self.max.y, self.max.z]),
-            na::Point::from([self.max.x, self.min.y, self.min.z]),
-            na::Point::from([self.max.x, self.min.y, self.max.z]),
-            na::Point::from([self.max.x, self.max.y, self.min.z]),
-            na::Point::from([self.max.x, self.max.y, self.max.z]),
-        ]
+    ///
+    /// Warning: bounding box of dimension D has 2^D corners
+    pub fn get_corners(&self) -> Vec<na::Point<S, 3>> {
+        (0..2usize.pow(3))
+            .into_iter()
+            .map(|i| {
+                na::Point::from(std::array::from_fn(|d| match (i >> d) & 1 {
+                    0 => self.min[d],
+                    1 => self.max[d],
+                    _ => unreachable!(),
+                }))
+            })
+            .collect()
     }
     /// Transform a Bounding Box - resulting in a enclosing axis aligned Bounding Box.
     pub fn transform(&self, mat: &na::Matrix4<S>) -> Self {
@@ -212,12 +208,8 @@ impl<S: Float + Debug + na::RealField + simba::scalar::RealField> BoundingBox<S>
     }
     /// Dilate a Bounding Box by some amount in all directions.
     pub fn dilate(&mut self, d: S) -> &mut Self {
-        self.min.x -= d;
-        self.min.y -= d;
-        self.min.z -= d;
-        self.max.x += d;
-        self.max.y += d;
-        self.max.z += d;
+        self.min.iter_mut().for_each(|coord| *coord -= d);
+        self.max.iter_mut().for_each(|coord| *coord += d);
         self
     }
     /// Add a Point to a Bounding Box, e.g. expand the Bounding Box to contain that point.
@@ -227,7 +219,7 @@ impl<S: Float + Debug + na::RealField + simba::scalar::RealField> BoundingBox<S>
         self
     }
     /// Return the size of the Box.
-    pub fn dim(&self) -> na::Vector3<S> {
+    pub fn dim(&self) -> na::SVector<S, 3> {
         self.max - self.min
     }
     /// Returns the approximate distance of p to the box. The result is guarateed to be not less
@@ -236,19 +228,25 @@ impl<S: Float + Debug + na::RealField + simba::scalar::RealField> BoundingBox<S>
         // If p is not inside (neg), then it is outside (pos) on only one side.
         // So so calculating the max of the diffs on both sides should result in the true value,
         // if positive.
-        let xval = Float::max(point.x - self.max.x, self.min.x - point.x);
-        let yval = Float::max(point.y - self.max.y, self.min.y - point.y);
-        let zval = Float::max(point.z - self.max.z, self.min.z - point.z);
-        Float::max(xval, Float::max(yval, zval))
+        point_max(&(point - self.max).into(), &(self.min - point).into())
+            .iter()
+            .fold(S::neg_infinity(), |a, b| Float::max(a, *b))
     }
     /// Return true if the Bounding Box contains p.
     pub fn contains(&self, point: &na::Point<S, 3>) -> bool {
-        point.x >= self.min.x
-            && point.x <= self.max.x
-            && point.y >= self.min.y
-            && point.y <= self.max.y
-            && point.z >= self.min.z
-            && point.z <= self.max.z
+        let is_bigger_than_min = self
+            .min
+            .iter()
+            .zip(point.iter())
+            .all(|(min_i, point_i)| *min_i <= *point_i);
+
+        let is_smaller_than_max = self
+            .max
+            .iter()
+            .zip(point.iter())
+            .all(|(max_i, point_i)| *max_i >= *point_i);
+
+        is_bigger_than_min && is_smaller_than_max
     }
 }
 
