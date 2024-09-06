@@ -78,10 +78,10 @@ fn point_best<S: 'static + Float + Debug, const D: usize>(
 }
 
 fn points_best<S: 'static + Float + Debug, const D: usize>(
-    p: &[na::Point<S, D>],
+    points: &[na::Point<S, D>],
     op: fn(S, S) -> S,
 ) -> na::Point<S, D> {
-    p.iter().fold(
+    points.iter().fold(
         na::Point::from([-op(S::infinity(), S::neg_infinity()); D]),
         |best, current| point_best(&best, current, op),
     )
@@ -102,15 +102,15 @@ fn point_max<S: 'static + Float + Debug, const D: usize>(
 }
 
 fn points_min<S: 'static + Float + Debug, const D: usize>(
-    p: &[na::Point<S, D>],
+    points: &[na::Point<S, D>],
 ) -> na::Point<S, D> {
-    points_best(p, S::min)
+    points_best(points, S::min)
 }
 
 fn points_max<S: 'static + Float + Debug, const D: usize>(
-    p: &[na::Point<S, D>],
+    points: &[na::Point<S, D>],
 ) -> na::Point<S, D> {
-    points_best(p, S::max)
+    points_best(points, S::max)
 }
 
 /// 3D Bounding Box - defined by two diagonally opposing points.
@@ -232,23 +232,23 @@ impl<S: Float + Debug + na::RealField + simba::scalar::RealField> BoundingBox<S>
     }
     /// Returns the approximate distance of p to the box. The result is guarateed to be not less
     /// than the euclidean distance of p to the box.
-    pub fn distance(&self, p: &na::Point<S, 3>) -> S {
+    pub fn distance(&self, point: &na::Point<S, 3>) -> S {
         // If p is not inside (neg), then it is outside (pos) on only one side.
         // So so calculating the max of the diffs on both sides should result in the true value,
         // if positive.
-        let xval = Float::max(p.x - self.max.x, self.min.x - p.x);
-        let yval = Float::max(p.y - self.max.y, self.min.y - p.y);
-        let zval = Float::max(p.z - self.max.z, self.min.z - p.z);
+        let xval = Float::max(point.x - self.max.x, self.min.x - point.x);
+        let yval = Float::max(point.y - self.max.y, self.min.y - point.y);
+        let zval = Float::max(point.z - self.max.z, self.min.z - point.z);
         Float::max(xval, Float::max(yval, zval))
     }
     /// Return true if the Bounding Box contains p.
-    pub fn contains(&self, p: &na::Point<S, 3>) -> bool {
-        p.x >= self.min.x
-            && p.x <= self.max.x
-            && p.y >= self.min.y
-            && p.y <= self.max.y
-            && p.z >= self.min.z
-            && p.z <= self.max.z
+    pub fn contains(&self, point: &na::Point<S, 3>) -> bool {
+        point.x >= self.min.x
+            && point.x <= self.max.x
+            && point.y >= self.min.y
+            && point.y <= self.max.y
+            && point.z >= self.min.z
+            && point.z <= self.max.z
     }
 }
 
