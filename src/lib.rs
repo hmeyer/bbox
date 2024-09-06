@@ -65,19 +65,40 @@ use nalgebra as na;
 use num_traits::Float;
 use std::fmt::Debug;
 
+fn point_best<S: 'static + Float + Debug, const D: usize>(
+    a: &na::Point<S, D>,
+    b: &na::Point<S, D>,
+    op: fn(S, S) -> S,
+) -> na::Point<S, D> {
+    let mut best: na::Point<S, D> = na::Point::default();
+    for (best_i, (a_i, b_i)) in best.iter_mut().zip(a.iter().zip(b.iter())) {
+        *best_i = op(*a_i, *b_i);
+    }
+    best
+}
+
 fn points_best<S: 'static + Float + Debug, const D: usize>(
     p: &[na::Point<S, D>],
     op: fn(S, S) -> S,
 ) -> na::Point<S, D> {
     p.iter().fold(
         na::Point::from([-op(S::infinity(), S::neg_infinity()); D]),
-        |mut best, current| {
-            for (best_i, current_i) in best.iter_mut().zip(current.iter()) {
-                *best_i = op(*best_i, *current_i);
-            }
-            best
-        },
+        |best, current| point_best(&best, current, op),
     )
+}
+
+fn point_min<S: 'static + Float + Debug, const D: usize>(
+    a: &na::Point<S, D>,
+    b: &na::Point<S, D>,
+) -> na::Point<S, D> {
+    point_best(a, b, S::min)
+}
+
+fn point_max<S: 'static + Float + Debug, const D: usize>(
+    a: &na::Point<S, D>,
+    b: &na::Point<S, D>,
+) -> na::Point<S, D> {
+    point_best(a, b, S::max)
 }
 
 fn points_min<S: 'static + Float + Debug, const D: usize>(
@@ -128,16 +149,8 @@ impl<S: Float + Debug + na::RealField + simba::scalar::RealField> BoundingBox<S>
     /// Create a new Bounding Box by supplying two points.
     pub fn new(a: &na::Point<S, 3>, b: &na::Point<S, 3>) -> Self {
         Self {
-            min: na::Point::from([
-                Float::min(a.x, b.x),
-                Float::min(a.y, b.y),
-                Float::min(a.z, b.z),
-            ]),
-            max: na::Point::from([
-                Float::max(a.x, b.x),
-                Float::max(a.y, b.y),
-                Float::max(a.z, b.z),
-            ]),
+            min: point_min(a, b),
+            max: point_max(a, b),
         }
     }
     /// Returns true if the Bounding Box is empty.
@@ -164,15 +177,15 @@ impl<S: Float + Debug + na::RealField + simba::scalar::RealField> BoundingBox<S>
     /// Create a CSG Union of two Bounding Boxes.
     pub fn union(&self, other: &Self) -> Self {
         Self {
-            min: points_min(&[self.min, other.min]),
-            max: points_max(&[self.max, other.max]),
+            min: point_min(&self.min, &other.min),
+            max: point_max(&self.max, &other.max),
         }
     }
     /// Create a CSG Intersection of two Bounding Boxes.
     pub fn intersection(&self, other: &Self) -> Self {
         Self {
-            min: points_max(&[self.min, other.min]),
-            max: points_min(&[self.max, other.max]),
+            min: point_max(&self.min, &other.min),
+            max: point_min(&self.max, &other.max),
         }
     }
     /// Get the corners of the Bounding Box
@@ -209,12 +222,8 @@ impl<S: Float + Debug + na::RealField + simba::scalar::RealField> BoundingBox<S>
     }
     /// Add a Point to a Bounding Box, e.g. expand the Bounding Box to contain that point.
     pub fn insert(&mut self, o: &na::Point<S, 3>) -> &mut Self {
-        self.min.x = Float::min(self.min.x, o.x);
-        self.min.y = Float::min(self.min.y, o.y);
-        self.min.z = Float::min(self.min.z, o.z);
-        self.max.x = Float::max(self.max.x, o.x);
-        self.max.y = Float::max(self.max.y, o.y);
-        self.max.z = Float::max(self.max.z, o.z);
+        self.min = point_min(&self.min, o);
+        self.max = point_max(&self.max, o);
         self
     }
     /// Return the size of the Box.
