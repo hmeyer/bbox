@@ -191,7 +191,6 @@ impl<S: Float + Debug + na::RealField + simba::scalar::RealField, const D: usize
     /// Warning: bounding box of dimension D has 2^D corners
     pub fn get_corners(&self) -> Vec<na::Point<S, 3>> {
         (0..2usize.pow(3))
-            .into_iter()
             .map(|i| {
                 na::Point::from(std::array::from_fn(|d| match (i >> d) & 1 {
                     0 => self.min[d],
