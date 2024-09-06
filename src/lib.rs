@@ -115,14 +115,16 @@ fn points_max<S: 'static + Float + Debug, const D: usize>(
 
 /// 3D Bounding Box - defined by two diagonally opposing points.
 #[derive(Clone, Debug, PartialEq)]
-pub struct BoundingBox<S: 'static + Debug + Copy + PartialEq> {
+pub struct BoundingBox<S: 'static + Debug + Copy + PartialEq, const D: usize> {
     /// X-Y-Z-Minimum corner of the box.
-    pub min: na::Point<S, 3>,
+    pub min: na::Point<S, D>,
     /// X-Y-Z-Maximum corner of the box.
-    pub max: na::Point<S, 3>,
+    pub max: na::Point<S, D>,
 }
 
-impl<S: Float + na::RealField, T: AsRef<[na::Point<S, 3>]>> From<T> for BoundingBox<S> {
+impl<S: Float + na::RealField, T: AsRef<[na::Point<S, D>]>, const D: usize> From<T>
+    for BoundingBox<S, D>
+{
     fn from(points: T) -> Self {
         Self {
             min: points_min(points.as_ref()),
@@ -131,23 +133,25 @@ impl<S: Float + na::RealField, T: AsRef<[na::Point<S, 3>]>> From<T> for Bounding
     }
 }
 
-impl<S: Float + Debug + na::RealField + simba::scalar::RealField> BoundingBox<S> {
+impl<S: Float + Debug + na::RealField + simba::scalar::RealField, const D: usize>
+    BoundingBox<S, D>
+{
     /// Returns an infinte sized box.
     pub fn infinity() -> Self {
         Self {
-            min: na::Point::from([S::neg_infinity(); 3]),
-            max: na::Point::from([S::infinity(); 3]),
+            min: na::Point::from([S::neg_infinity(); D]),
+            max: na::Point::from([S::infinity(); D]),
         }
     }
     /// Returns a negatively infinte sized box.
     pub fn neg_infinity() -> Self {
         Self {
-            min: na::Point::from([S::infinity(); 3]),
-            max: na::Point::from([S::neg_infinity(); 3]),
+            min: na::Point::from([S::infinity(); D]),
+            max: na::Point::from([S::neg_infinity(); D]),
         }
     }
     /// Create a new Bounding Box by supplying two points.
-    pub fn new(a: &na::Point<S, 3>, b: &na::Point<S, 3>) -> Self {
+    pub fn new(a: &na::Point<S, D>, b: &na::Point<S, D>) -> Self {
         Self {
             min: point_min(a, b),
             max: point_max(a, b),
@@ -165,7 +169,7 @@ impl<S: Float + Debug + na::RealField + simba::scalar::RealField> BoundingBox<S>
             .all(|x| x.is_finite())
     }
     /// Returns the center point of the Bounding Box.
-    pub fn center(&self) -> na::Point<S, 3> {
+    pub fn center(&self) -> na::Point<S, D> {
         self.min + (self.max - self.min) / S::from(2.0).unwrap()
     }
     /// Create a CSG Union of two Bounding Boxes.
@@ -197,15 +201,6 @@ impl<S: Float + Debug + na::RealField + simba::scalar::RealField> BoundingBox<S>
             })
             .collect()
     }
-    /// Transform a Bounding Box - resulting in a enclosing axis aligned Bounding Box.
-    pub fn transform(&self, mat: &na::Matrix4<S>) -> Self {
-        let corners = self.get_corners();
-        let transformed: Vec<_> = corners
-            .into_iter()
-            .map(|c| mat.transform_point(&c))
-            .collect();
-        Self::from(&transformed)
-    }
     /// Dilate a Bounding Box by some amount in all directions.
     pub fn dilate(&mut self, d: S) -> &mut Self {
         self.min.iter_mut().for_each(|coord| *coord -= d);
@@ -213,18 +208,18 @@ impl<S: Float + Debug + na::RealField + simba::scalar::RealField> BoundingBox<S>
         self
     }
     /// Add a Point to a Bounding Box, e.g. expand the Bounding Box to contain that point.
-    pub fn insert(&mut self, o: &na::Point<S, 3>) -> &mut Self {
+    pub fn insert(&mut self, o: &na::Point<S, D>) -> &mut Self {
         self.min = point_min(&self.min, o);
         self.max = point_max(&self.max, o);
         self
     }
     /// Return the size of the Box.
-    pub fn dim(&self) -> na::SVector<S, 3> {
+    pub fn dim(&self) -> na::SVector<S, D> {
         self.max - self.min
     }
     /// Returns the approximate distance of p to the box. The result is guarateed to be not less
     /// than the euclidean distance of p to the box.
-    pub fn distance(&self, point: &na::Point<S, 3>) -> S {
+    pub fn distance(&self, point: &na::Point<S, D>) -> S {
         // If p is not inside (neg), then it is outside (pos) on only one side.
         // So so calculating the max of the diffs on both sides should result in the true value,
         // if positive.
@@ -233,7 +228,7 @@ impl<S: Float + Debug + na::RealField + simba::scalar::RealField> BoundingBox<S>
             .fold(S::neg_infinity(), |a, b| Float::max(a, *b))
     }
     /// Return true if the Bounding Box contains p.
-    pub fn contains(&self, point: &na::Point<S, 3>) -> bool {
+    pub fn contains(&self, point: &na::Point<S, D>) -> bool {
         let is_bigger_than_min = self
             .min
             .iter()
@@ -250,7 +245,19 @@ impl<S: Float + Debug + na::RealField + simba::scalar::RealField> BoundingBox<S>
     }
 }
 
-impl<T: Float> AbsDiffEq for BoundingBox<T>
+impl<S: Float + Debug + na::RealField + simba::scalar::RealField> BoundingBox<S, 3> {
+    /// Transform a Bounding Box - resulting in a enclosing axis aligned Bounding Box.
+    pub fn transform(&self, mat: &na::Matrix4<S>) -> Self {
+        let corners = self.get_corners();
+        let transformed: Vec<_> = corners
+            .into_iter()
+            .map(|c| mat.transform_point(&c))
+            .collect();
+        Self::from(&transformed)
+    }
+}
+
+impl<T: Float, const D: usize> AbsDiffEq for BoundingBox<T, D>
 where
     <T as AbsDiffEq>::Epsilon: Copy,
     T: AbsDiffEq + Debug,
@@ -267,7 +274,7 @@ where
     }
 }
 
-impl<T: Float> RelativeEq for BoundingBox<T>
+impl<T: Float, const D: usize> RelativeEq for BoundingBox<T, D>
 where
     <T as AbsDiffEq>::Epsilon: Copy,
     T: RelativeEq + Debug,
@@ -342,7 +349,7 @@ mod test {
 
     #[test]
     fn is_empty() {
-        let bbox = BoundingBox::<f64>::neg_infinity();
+        let bbox = BoundingBox::<f64, 3>::neg_infinity();
         assert!(bbox.is_empty());
         let bbox = BoundingBox::from([na::Point::from([0., 0., 0.])]);
         assert!(!bbox.is_empty());
@@ -350,7 +357,7 @@ mod test {
 
     #[test]
     fn is_finite() {
-        let bbox = BoundingBox::<f64>::neg_infinity();
+        let bbox = BoundingBox::<f64, 3>::neg_infinity();
         assert!(!bbox.is_finite());
         let bbox = BoundingBox::from([na::Point::from([0., 0., 0.])]);
         assert!(bbox.is_finite());
