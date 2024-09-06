@@ -65,16 +65,7 @@ use nalgebra as na;
 use num_traits::Float;
 use std::fmt::Debug;
 
-/// 3D Bounding Box - defined by two diagonally opposing points.
-#[derive(Clone, Debug, PartialEq)]
-pub struct BoundingBox<S: 'static + Debug + Copy + PartialEq> {
-    /// X-Y-Z-Minimum corner of the box.
-    pub min: na::Point<S, 3>,
-    /// X-Y-Z-Maximum corner of the box.
-    pub max: na::Point<S, 3>,
-}
-
-fn point_best<S: 'static + Float + Debug, const D: usize>(
+fn points_best<S: 'static + Float + Debug, const D: usize>(
     p: &[na::Point<S, D>],
     op: fn(S, S) -> S,
 ) -> na::Point<S, D> {
@@ -89,18 +80,32 @@ fn point_best<S: 'static + Float + Debug, const D: usize>(
     )
 }
 
-fn point_min<S: 'static + Float + Debug, const D: usize>(p: &[na::Point<S, D>]) -> na::Point<S, D> {
-    point_best(p, S::min)
+fn points_min<S: 'static + Float + Debug, const D: usize>(
+    p: &[na::Point<S, D>],
+) -> na::Point<S, D> {
+    points_best(p, S::min)
 }
-fn point_max<S: 'static + Float + Debug, const D: usize>(p: &[na::Point<S, D>]) -> na::Point<S, D> {
-    point_best(p, S::max)
+
+fn points_max<S: 'static + Float + Debug, const D: usize>(
+    p: &[na::Point<S, D>],
+) -> na::Point<S, D> {
+    points_best(p, S::max)
+}
+
+/// 3D Bounding Box - defined by two diagonally opposing points.
+#[derive(Clone, Debug, PartialEq)]
+pub struct BoundingBox<S: 'static + Debug + Copy + PartialEq> {
+    /// X-Y-Z-Minimum corner of the box.
+    pub min: na::Point<S, 3>,
+    /// X-Y-Z-Maximum corner of the box.
+    pub max: na::Point<S, 3>,
 }
 
 impl<S: Float + na::RealField, T: AsRef<[na::Point<S, 3>]>> From<T> for BoundingBox<S> {
     fn from(points: T) -> Self {
         Self {
-            min: point_min(points.as_ref()),
-            max: point_max(points.as_ref()),
+            min: points_min(points.as_ref()),
+            max: points_max(points.as_ref()),
         }
     }
 }
@@ -159,15 +164,15 @@ impl<S: Float + Debug + na::RealField + simba::scalar::RealField> BoundingBox<S>
     /// Create a CSG Union of two Bounding Boxes.
     pub fn union(&self, other: &Self) -> Self {
         Self {
-            min: point_min(&[self.min, other.min]),
-            max: point_max(&[self.max, other.max]),
+            min: points_min(&[self.min, other.min]),
+            max: points_max(&[self.max, other.max]),
         }
     }
     /// Create a CSG Intersection of two Bounding Boxes.
     pub fn intersection(&self, other: &Self) -> Self {
         Self {
-            min: point_max(&[self.min, other.min]),
-            max: point_min(&[self.max, other.max]),
+            min: points_max(&[self.min, other.min]),
+            max: points_min(&[self.max, other.max]),
         }
     }
     /// Get the corners of the Bounding Box
