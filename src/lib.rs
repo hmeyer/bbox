@@ -65,7 +65,8 @@ use nalgebra as na;
 use num_traits::Float;
 use std::fmt::Debug;
 
-fn point_best<S: 'static + Float + Debug, const D: usize>(
+/// Apply a binary operation to every coordinate of a and b
+fn apply_binary_op<S: 'static + Float + Debug, const D: usize>(
     a: &na::Point<S, D>,
     b: &na::Point<S, D>,
     op: fn(S, S) -> S,
@@ -83,7 +84,7 @@ fn points_best<S: 'static + Float + Debug, const D: usize>(
 ) -> na::Point<S, D> {
     points.iter().fold(
         na::Point::from([-op(S::infinity(), S::neg_infinity()); D]),
-        |best, current| point_best(&best, current, op),
+        |best, current| apply_binary_op(&best, current, op),
     )
 }
 
@@ -91,14 +92,14 @@ fn point_min<S: 'static + Float + Debug, const D: usize>(
     a: &na::Point<S, D>,
     b: &na::Point<S, D>,
 ) -> na::Point<S, D> {
-    point_best(a, b, S::min)
+    apply_binary_op(a, b, S::min)
 }
 
 fn point_max<S: 'static + Float + Debug, const D: usize>(
     a: &na::Point<S, D>,
     b: &na::Point<S, D>,
 ) -> na::Point<S, D> {
-    point_best(a, b, S::max)
+    apply_binary_op(a, b, S::max)
 }
 
 fn points_min<S: 'static + Float + Debug, const D: usize>(
