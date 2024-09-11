@@ -78,14 +78,13 @@ fn apply_binary_op<S: 'static + Float + Debug, const D: usize>(
     best
 }
 
-fn points_best<S: 'static + Float + Debug, const D: usize>(
-    points: &[na::Point<S, D>],
+/// Fold points with a binary operation applied to every coordinate
+fn fold_points<'a, S: 'static + Float + Debug, const D: usize>(
+    initial: na::Point<S, D>,
+    points: impl Iterator<Item = &'a na::Point<S, D>>,
     op: fn(S, S) -> S,
 ) -> na::Point<S, D> {
-    points.iter().fold(
-        na::Point::from([-op(S::infinity(), S::neg_infinity()); D]),
-        |best, current| apply_binary_op(&best, current, op),
-    )
+    points.fold(initial, |best, current| apply_binary_op(&best, current, op))
 }
 
 fn point_min<S: 'static + Float + Debug, const D: usize>(
@@ -105,13 +104,13 @@ fn point_max<S: 'static + Float + Debug, const D: usize>(
 fn points_min<S: 'static + Float + Debug, const D: usize>(
     points: &[na::Point<S, D>],
 ) -> na::Point<S, D> {
-    points_best(points, S::min)
+    fold_points([S::infinity(); D].into(), points.iter(), S::min)
 }
 
 fn points_max<S: 'static + Float + Debug, const D: usize>(
     points: &[na::Point<S, D>],
 ) -> na::Point<S, D> {
-    points_best(points, S::max)
+    fold_points([S::neg_infinity(); D].into(), points.iter(), S::max)
 }
 
 /// 3D Bounding Box - defined by two diagonally opposing points.
