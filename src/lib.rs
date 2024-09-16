@@ -101,16 +101,16 @@ fn point_max<S: 'static + Float + Debug, const D: usize>(
     apply_binary_op(a, b, S::max)
 }
 
-fn points_min<S: 'static + Float + Debug, const D: usize>(
-    points: &[na::Point<S, D>],
+fn points_min<'a, S: 'static + Float + Debug, const D: usize>(
+    points: impl Iterator<Item = &'a na::Point<S, D>>,
 ) -> na::Point<S, D> {
-    fold_points([S::infinity(); D].into(), points.iter(), S::min)
+    fold_points([S::infinity(); D].into(), points, S::min)
 }
 
-fn points_max<S: 'static + Float + Debug, const D: usize>(
-    points: &[na::Point<S, D>],
+fn points_max<'a, S: 'static + Float + Debug, const D: usize>(
+    points: impl Iterator<Item = &'a na::Point<S, D>>,
 ) -> na::Point<S, D> {
-    fold_points([S::neg_infinity(); D].into(), points.iter(), S::max)
+    fold_points([S::neg_infinity(); D].into(), points, S::max)
 }
 
 /// 3D Bounding Box - defined by two diagonally opposing points.
@@ -127,8 +127,8 @@ impl<S: Float + na::RealField, T: AsRef<[na::Point<S, D>]>, const D: usize> From
 {
     fn from(points: T) -> Self {
         Self {
-            min: points_min(points.as_ref()),
-            max: points_max(points.as_ref()),
+            min: points_min(points.as_ref().iter()),
+            max: points_max(points.as_ref().iter()),
         }
     }
 }
