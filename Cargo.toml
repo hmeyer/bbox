@@ -1,6 +1,6 @@
 [package]
 name = "bbox"
-version = "0.14.1"
+version = "0.15.0"
 authors = ["Henning Meyer <tutmann@gmail.com>"]
 edition = "2024"
 rust-version = "1.85"
