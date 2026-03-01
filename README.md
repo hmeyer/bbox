@@ -1,6 +1,6 @@
 # bbox
-![test workflow](https://github.com/hmeyer/bbox/actions/workflows/test.yml/badge.svg?branch=master)
-![build workflow](https://github.com/hmeyer/bbox/actions/workflows/build.yml/badge.svg?branch=master)
+![test workflow](https://github.com/hmeyer/bbox/actions/workflows/test.yml/badge.svg?branch=main)
+![build workflow](https://github.com/hmeyer/bbox/actions/workflows/build.yml/badge.svg?branch=main)
 [![Cargo](https://img.shields.io/crates/v/bbox.svg)](https://crates.io/crates/bbox)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Downloads](https://img.shields.io/crates/d/bbox.svg)](#downloads)
