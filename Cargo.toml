@@ -2,7 +2,8 @@
 name = "bbox"
 version = "0.14.1"
 authors = ["Henning Meyer <tutmann@gmail.com>"]
-edition = "2021"
+edition = "2024"
+rust-version = "1.85"
 
 description = "Managing axis aligned Bounding Boxes."
 repository = "https://github.com/hmeyer/bbox"
@@ -18,7 +19,6 @@ path = "src/lib.rs"
 mint = ["nalgebra/mint"]
 
 [dependencies]
-approx = "0.5.0"
-nalgebra = "0.31.2"
-num-traits = "0.2.14"
-simba = "0.7.2"
+approx = "0.5"
+nalgebra = "0.34"
+num-traits = "0.2"

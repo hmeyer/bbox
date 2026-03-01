@@ -133,9 +133,7 @@ impl<S: Float + na::RealField, T: AsRef<[na::Point<S, D>]>, const D: usize> From
     }
 }
 
-impl<S: Float + Debug + na::RealField + simba::scalar::RealField, const D: usize>
-    BoundingBox<S, D>
-{
+impl<S: Float + Debug + na::RealField, const D: usize> BoundingBox<S, D> {
     /// Returns an infinte sized box.
     pub fn infinity() -> Self {
         Self {
@@ -244,7 +242,7 @@ impl<S: Float + Debug + na::RealField + simba::scalar::RealField, const D: usize
     }
 }
 
-impl<S: Float + Debug + na::RealField + simba::scalar::RealField> BoundingBox<S, 3> {
+impl<S: Float + Debug + na::RealField> BoundingBox<S, 3> {
     /// Transform a Bounding Box - resulting in a enclosing axis aligned Bounding Box.
     pub fn transform(&self, mat: &na::Matrix4<S>) -> Self {
         let corners = self.get_corners();
@@ -399,7 +397,7 @@ mod test {
         );
         assert_relative_eq!(
             bbox.transform(
-                &na::Rotation::from_euler_angles(::std::f64::consts::PI / 2., 0., 0.)
+                &na::Rotation::from_euler_angles(std::f64::consts::PI / 2., 0., 0.)
                     .to_homogeneous()
             ),
             BoundingBox::new(
